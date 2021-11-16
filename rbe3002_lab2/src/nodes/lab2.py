@@ -28,7 +28,8 @@ class Lab2:
         rospy.Subscriber('/odom', Odometry, self.update_odometry)
         ### Tell ROS that this node subscribes to PoseStamped messages on the '/move_base_simple/goal' topic
         ### When a message is received, call self.go_to
-        rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.go_to)
+        # rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.go_to)
+        rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.arc_to)
         #pass # delete this when you implement your code
 
         # Give ROS time to initial nodes
@@ -91,7 +92,6 @@ class Lab2:
             distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2))
             heading_error = heading_goal - self.pth
             self.send_speed(linear_speed, aspeed * heading_error * kp_th)
-            # print(px_goal, py_goal, self.px, self.py)
             print(distance_error)
             rospy.sleep(0.05)
 
@@ -209,14 +209,65 @@ class Lab2:
 
 
 
-    def arc_to(self, position):
+    #def arc_to(self, position):
+    def arc_to(self, msg):    
         """
         Drives to a given position in an arc.
         :param msg [PoseStamped] The target pose.
         """
         ### EXTRA CREDIT
-        # TODO
-        pass # delete this when you implement your code
+        # 
+        
+        LSPEED = 0.2
+        ASPEED = 0.15
+        
+        kp_lspeed = 1
+        kp_th = 0.1
+        
+        ### MATH FOR X AND Y DISTANCE
+        px_0 = self.px
+        py_0 = self.py
+        px_goal = msg.pose.position.x
+        py_goal = msg.pose.position.y
+        # print(px_goal, py_goal)
+
+        ### MATH FOR THETA DISTANCE FOR ROTATION 1
+        pth_0 = self.pth
+        pth_goal_1 = math.atan2(py_goal - py_0, px_goal - px_0)
+        
+        TOLERANCE = 0.05
+        
+        while (abs(self.px - px_goal) > TOLERANCE or abs(self.py - py_goal) > TOLERANCE):
+            pth_goal = math.atan2(py_goal - self.py, px_goal - self.px)
+            
+            distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2))
+            heading_error = pth_goal - self.pth
+            
+            lspeed = LSPEED * distance_error * kp_lspeed
+            if (lspeed > LSPEED):
+                lspeed = LSPEED
+                
+            aspeed = ASPEED * heading_error * kp_th
+            if (aspeed > ASPEED):
+                aspeed = ASPEED
+            
+            self.send_speed(lspeed, aspeed)
+        
+        self.send_speed(0, 0)
+        rospy.sleep(1)
+            
+
+        # CODE FOR SECOND ROTATION
+        ### MATH FOR THETA DISTANCE FOR ROTATION 2
+        pth_0 = self.pth
+        quat_orig = msg.pose.orientation
+        quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
+        (roll, pitch, yaw) = euler_from_quaternion(quat_list)
+        pth_goal_2 = yaw
+        pth_curr = pth_goal_2 - pth_0
+        self.rotate(pth_curr, 0.15)    # CHANGE TO DEPEND ON LOCATION OF FINAL ANGLE
+        rospy.sleep(1)
+        # pass # delete this when you implement your code
 
 
 
