@@ -18,9 +18,8 @@ class PathPlanner:
         ### REQUIRED CREDIT
         ## Initialize the node and call it "path_planner"
         rospy.init_node("path_planner")
-        ## Create a new service called "plan_path" that accepts messages of
-        ## type GetPlan and calls self.plan_path() when a message is received
-        self.plan_service = rospy.service('plan_path', GetPlan, self.plan_path)
+        ## Create a new sresoltion - x_anchord calls self.plan_path() when a message is received
+        self.plan_service = rospy.Service('plan_path', GetPlan, self.plan_path)
         ## Create a publisher for the C-space (the enlarged occupancy grid)
         ## The topic is "/path_planner/cspace", the message type is GridCells
         self.Cspace_pub = rospy.Publisher('/path_planner/cspace', GridCells, queue_size=10)
@@ -93,19 +92,21 @@ class PathPlanner:
         # origin.x and origin.y are the position of the origin in the world
         # ADAPT THIS CODE TO THE TEMPLATE - DO NOT COPY-PASTE
         
-        resolution = mapdata.resolution
-        x_anchor = mapdata.width/2
-        y_anchor = mapdata.height/2
+        resolution = mapdata.info.resolution
 
-        center = resoltion - x_anchor
+        origin.x = mapdata.info.origin.position.x
+        origin.y = mapdata.info.origin.position.y
 
-        print(mapdata.origin)
+        x_anchor = mapdata.info.width/2
+        y_anchor = mapdata.info.height/2
 
+        center = math.sqrt((x_anchor)**2 + (y_anchor)**2)
+
+        print(mapdata.info.origin)
 
         gc.x = int((wp.x - origin.x) / resolution)
         gc.y = int((wp.y - origin.y) / resolution)
 
-        pass
 
 
         
@@ -191,12 +192,7 @@ class PathPlanner:
         Calculates the C-Space, i.e., makes the obstacles in the map thicker.
         Publishes the list of cells that were added to the original map.
         :param mapdata [OccupancyGrid] The map data.
-        :param padding [int]           The number of cells around the obstacles.
-        :return        [OccupancyGrid] The C-Space.
-        """
-        ### REQUIRED CREDIT
-        rospy.loginfo("Calculating C-Space")
-        ## Go through each cell in the occupancy grid
+        :param padding [iresoltion - x_anchorh cell in the occupancy grid """
         ## Inflate the obstacles where necessary
         # TODO
         ## Create a GridCells message and publish it
@@ -257,12 +253,17 @@ class PathPlanner:
         ## Return a Path message
         return self.path_to_message(mapdata, waypoints)
 
+        
+
 
     
     def run(self):
         """
         Runs the node until Ctrl-C is pressed.
         """
+        mapdata = self.request_map()
+        self.world_to_grid(mapdata, 1)
+        print('hi')
         rospy.spin()
 
 
