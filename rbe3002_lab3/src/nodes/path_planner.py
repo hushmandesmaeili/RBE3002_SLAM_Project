@@ -10,7 +10,6 @@ from geometry_msgs.msg import Point, Pose, PoseStamped
 
 class PathPlanner:
 
-
     
     def __init__(self):
         """
