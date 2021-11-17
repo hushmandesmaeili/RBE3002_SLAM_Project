@@ -75,7 +75,18 @@ class PathPlanner:
         :param y       [int]           The cell Y coordinate.
         :return        [Point]         The position in the world.
         """
-        ### REQUIRED CREDIT
+        # wp.x and wp.y are the world coordinates
+        # gc.x and gc.y are the grid coordinates
+        # resolution is the map resolution
+        # origin.x and origin.y are the position of the origin in the world
+        wp.x = (gc.x + 0.5) * mapdata.info.resolution + mapdata.info.origin.point.x
+        wp.y = (gc.y + 0.5) * mapdata.info.resolution + mapdata.info.origin.point.y
+        worldPoint = Point()
+        worldPoint.x = wp.x
+        worldPoint.y = wp.y
+        print(mapdata.info.origin)
+        print(worldPoint)
+        return worldPoint
         pass
 
 
