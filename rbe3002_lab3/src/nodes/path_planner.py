@@ -159,6 +159,14 @@ class PathPlanner:
         """
         ### REQUIRED CREDIT
         rospy.loginfo("Requesting the map")
+        rospy.wait_for_service('/static_map')
+        mapdata = rospy.ServiceProxy('/static_map', GetMap)
+        try:
+            resp1 = mapdata()
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+
+        return resp1.map
 
 
 
