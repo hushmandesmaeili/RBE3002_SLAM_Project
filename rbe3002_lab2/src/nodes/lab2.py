@@ -234,7 +234,7 @@ class Lab2:
 
     def run(self):
         #self.send_speed(0.2, 0)
-        #self.drive(2, 0.2)
+        self.drive(2, 0.2)
         #self.rotate(1.57, 0.3)
         rospy.spin()
 
