@@ -10,7 +10,6 @@ from geometry_msgs.msg import Point, Pose, PoseStamped
 
 class PathPlanner:
 
-
     
     def __init__(self):
         """
@@ -19,9 +18,8 @@ class PathPlanner:
         ### REQUIRED CREDIT
         ## Initialize the node and call it "path_planner"
         rospy.init_node("path_planner")
-        ## Create a new service called "plan_path" that accepts messages of
-        ## type GetPlan and calls self.plan_path() when a message is received
-        self.plan_service = rospy.service('plan_path', GetPlan, self.plan_path)
+        ## Create a new sresoltion - x_anchord calls self.plan_path() when a message is received
+        self.plan_service = rospy.Service('plan_path', GetPlan, self.plan_path)
         ## Create a publisher for the C-space (the enlarged occupancy grid)
         ## The topic is "/path_planner/cspace", the message type is GridCells
         self.Cspace_pub = rospy.Publisher('/path_planner/cspace', GridCells, queue_size=10)
@@ -90,8 +88,22 @@ class PathPlanner:
         :param wp      [Point]         The world coordinate.
         :return        [(int,int)]     The cell position as a tuple.
         """
-        ### REQUIRED CREDIT
-        pass
+        # wc.x and wc.y are the world coordinates
+        # gc.x and gc.y are the grid coordinates
+        # resolution is the map resolution
+        # origin.x and origin.y are the position of the origin in the world
+        # ADAPT THIS CODE TO THE TEMPLATE - DO NOT COPY-PASTE
+        
+        resolution = mapdata.info.resolution
+
+        origin_x = mapdata.info.origin.position.x
+        origin_y = mapdata.info.origin.position.y
+
+        gc_x = int((wp.x - origin_x) / resolution)
+        gc_y = int((wp.y - origin_y) / resolution)
+
+        return [(gc_x, gc_y)]
+
 
 
         
@@ -161,6 +173,14 @@ class PathPlanner:
         """
         ### REQUIRED CREDIT
         rospy.loginfo("Requesting the map")
+        rospy.wait_for_service('/static_map')
+        mapdata = rospy.ServiceProxy('/static_map', GetMap)
+        try:
+            resp1 = mapdata()
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+
+        return resp1.map
 
 
 
@@ -169,12 +189,7 @@ class PathPlanner:
         Calculates the C-Space, i.e., makes the obstacles in the map thicker.
         Publishes the list of cells that were added to the original map.
         :param mapdata [OccupancyGrid] The map data.
-        :param padding [int]           The number of cells around the obstacles.
-        :return        [OccupancyGrid] The C-Space.
-        """
-        ### REQUIRED CREDIT
-        rospy.loginfo("Calculating C-Space")
-        ## Go through each cell in the occupancy grid
+        :param padding [iresoltion - x_anchorh cell in the occupancy grid """
         ## Inflate the obstacles where necessary
         # TODO
         ## Create a GridCells message and publish it
@@ -235,12 +250,17 @@ class PathPlanner:
         ## Return a Path message
         return self.path_to_message(mapdata, waypoints)
 
+        
+
 
     
     def run(self):
         """
         Runs the node until Ctrl-C is pressed.
         """
+        mapdata = self.request_map()
+        self.world_to_grid(mapdata, 1)
+        print('hi')
         rospy.spin()
 
 
