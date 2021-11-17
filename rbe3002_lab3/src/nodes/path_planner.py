@@ -94,18 +94,13 @@ class PathPlanner:
         
         resolution = mapdata.info.resolution
 
-        origin.x = mapdata.info.origin.position.x
-        origin.y = mapdata.info.origin.position.y
+        origin_x = mapdata.info.origin.position.x
+        origin_y = mapdata.info.origin.position.y
 
-        x_anchor = mapdata.info.width/2
-        y_anchor = mapdata.info.height/2
+        gc_x = int((wp.x - origin_x) / resolution)
+        gc_y = int((wp.y - origin_y) / resolution)
 
-        center = math.sqrt((x_anchor)**2 + (y_anchor)**2)
-
-        print(mapdata.info.origin)
-
-        gc.x = int((wp.x - origin.x) / resolution)
-        gc.y = int((wp.y - origin.y) / resolution)
+        return [(gc_x, gc_y)]
 
 
 
