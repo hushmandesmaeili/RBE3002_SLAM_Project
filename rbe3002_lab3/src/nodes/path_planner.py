@@ -21,13 +21,15 @@ class PathPlanner:
         rospy.init_node("path_planner")
         ## Create a new service called "plan_path" that accepts messages of
         ## type GetPlan and calls self.plan_path() when a message is received
-        # TODO
+        self.plan_service = rospy.service('plan_path', GetPlan, self.plan_path)
         ## Create a publisher for the C-space (the enlarged occupancy grid)
         ## The topic is "/path_planner/cspace", the message type is GridCells
-        # TODO
+        self.Cspace_pub = rospy.Publisher('/path_planner/cspace', GridCells, queue_size=10)
         ## Create publishers for A* (expanded cells, frontier, ...)
         ## Choose a the topic names, the message type is GridCells
-        # TODO
+        self.expanded_cells_pub = rospy.Publisher('/path_planner/expanded_cells', GridCells, queue_size=10)
+        self.frontier_pub = rospy.Publisher('/path_planner/frontier', GridCells, queue_size=10)
+        self.visited_pub = rospy.Publisher('/path_planner/visited', GridCells, queue_size=10)
         ## Initialize the request counter
         # TODO
         ## Sleep to allow roscore to do some housekeeping
@@ -59,7 +61,8 @@ class PathPlanner:
         :param y2 [int or float] Y coordinate of second point.
         :return   [float]        The distance.
         """
-        ### REQUIRED CREDIT
+        distance = (math.sqrt((x2 - x1)**2 + (y2 - y1)**2))
+        return distance
         pass
         
 
