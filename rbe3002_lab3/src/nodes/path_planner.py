@@ -46,7 +46,8 @@ class PathPlanner:
         :param y [int] The cell Y coordinate.
         :return  [int] The index.
         """
-        ### REQUIRED CREDIT
+        index = mapdata.cells.y * mapdata.width + mapdata.cells.x
+        return index
         pass
 
 
