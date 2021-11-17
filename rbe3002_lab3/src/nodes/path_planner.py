@@ -88,7 +88,24 @@ class PathPlanner:
         :param wp      [Point]         The world coordinate.
         :return        [(int,int)]     The cell position as a tuple.
         """
-        ### REQUIRED CREDIT
+        # wc.x and wc.y are the world coordinates
+        # gc.x and gc.y are the grid coordinates
+        # resolution is the map resolution
+        # origin.x and origin.y are the position of the origin in the world
+        # ADAPT THIS CODE TO THE TEMPLATE - DO NOT COPY-PASTE
+        
+        resolution = mapdata.resolution
+        x_anchor = mapdata.width/2
+        y_anchor = mapdata.height/2
+
+        center = resoltion - x_anchor
+
+        print(mapdata.origin)
+
+
+        gc.x = int((wp.x - origin.x) / resolution)
+        gc.y = int((wp.y - origin.y) / resolution)
+
         pass
 
 
@@ -159,14 +176,6 @@ class PathPlanner:
         """
         ### REQUIRED CREDIT
         rospy.loginfo("Requesting the map")
-        rospy.wait_for_service('/static_map')
-        mapdata = rospy.ServiceProxy('/static_map', GetMap)
-        try:
-            resp1 = mapdata()
-        except rospy.ServiceException as exc:
-            print("Service did not process request: " + str(exc))
-
-        return resp1.map
 
 
 
