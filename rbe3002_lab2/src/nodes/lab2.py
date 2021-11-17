@@ -28,13 +28,12 @@ class Lab2:
         rospy.Subscriber('/odom', Odometry, self.update_odometry)
         ### Tell ROS that this node subscribes to PoseStamped messages on the '/move_base_simple/goal' topic
         ### When a message is received, call self.go_to
-        rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.go_to)
+        # rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.go_to)
+        rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.arc_to)
         #pass # delete this when you implement your code
 
         # Give ROS time to initial nodes
         rospy.sleep(2)
-
-
 
     def send_speed(self, linear_speed, angular_speed):
         """
@@ -57,8 +56,6 @@ class Lab2:
 
         ### Publish the message
         self.speed_pub.publish(msg_cmd_vel)
-
-
 
     def drive(self, distance, linear_speed):
         """
@@ -91,12 +88,10 @@ class Lab2:
             distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2))
             heading_error = heading_goal - self.pth
             self.send_speed(linear_speed, aspeed * heading_error * kp_th)
-            # print(px_goal, py_goal, self.px, self.py)
             print(distance_error)
             rospy.sleep(0.05)
 
         self.send_speed(0, 0)
-
 
     def rotate(self, angle, aspeed):
         """
@@ -124,7 +119,6 @@ class Lab2:
 
         self.send_speed(0, 0)
 
-
     def computeAngleError(self, ang1, ang2):
 
         while (ang1 < 0):
@@ -148,7 +142,6 @@ class Lab2:
             error -= 2*math.pi
 
         return (error)
-
 
     def go_to(self, msg):
         """
@@ -191,8 +184,6 @@ class Lab2:
         self.rotate(pth_curr, 0.15)    # CHANGE TO DEPEND ON LOCATION OF FINAL ANGLE
         rospy.sleep(1)
 
-
-
     def update_odometry(self, msg):
         """
         Updates the current pose of the robot.
@@ -207,18 +198,81 @@ class Lab2:
         (roll, pitch, yaw) = euler_from_quaternion(quat_list)
         self.pth = yaw
 
-
-
-    def arc_to(self, position):
+    def arc_to(self, msg):    
         """
         Drives to a given position in an arc.
         :param msg [PoseStamped] The target pose.
         """
         ### EXTRA CREDIT
-        # TODO
-        pass # delete this when you implement your code
+        
+        ## Constants and variables defined
+        LSPEED = 0.2
+        ASPEED = 0.7
+        
+        # Kp value for linear speed
+        kp_lspeed = 0.5
+        
+        # Ki value for linear speed, 
+        # sum of error variable for integral term plus errorBound
+        ki_lspeed = 0.035
+        sum_error = 0
+        errorBound = 10
 
+        # Kp value for heading
+        kp_th = 0.7
+        
+        ### Initial and goal x,y positions
+        px_0 = self.px
+        py_0 = self.py
+        px_goal = msg.pose.position.x
+        py_goal = msg.pose.position.y
 
+        ### Initial orientation
+        pth_0 = self.pth
+        
+        TOLERANCE = 0.02
+        
+        while (abs(self.px - px_goal) > TOLERANCE or abs(self.py - py_goal) > TOLERANCE):
+            pth_goal = math.atan2(py_goal - self.py, px_goal - self.px)
+            
+            distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2))
+            heading_error = self.computeAngleError(self.pth, pth_goal)
+            
+            sum_error = sum_error + distance_error
+            if (sum_error > errorBound):
+                sum_error = errorBound
+            elif (sum_error < -1*errorBound):
+                sum_error = -1*errorBound
+
+            lspeed = LSPEED * (kp_lspeed * distance_error + ki_lspeed * sum_error)
+            if (lspeed < 0.05):
+                lspeed = 0.05
+            elif (lspeed > LSPEED):
+                lspeed = LSPEED
+
+            aspeed = ASPEED * heading_error * kp_th
+            
+            self.send_speed(lspeed, aspeed)
+            # print(aspeed)
+            # print(lspeed)
+
+            rospy.sleep(0.05)
+        
+        self.send_speed(0, 0)
+        rospy.sleep(1)
+            
+
+        # CODE FOR SECOND ROTATION
+        ### MATH FOR THETA DISTANCE FOR ROTATION 2
+        pth_0 = self.pth
+        quat_orig = msg.pose.orientation
+        quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
+        (roll, pitch, yaw) = euler_from_quaternion(quat_list)
+        pth_goal_2 = yaw
+        pth_curr = pth_goal_2 - pth_0
+        self.rotate(pth_curr, 0.3)    # CHANGE TO DEPEND ON LOCATION OF FINAL ANGLE
+        rospy.sleep(1)
+        # pass # delete this when you implement your code
 
     def smooth_drive(self, distance, linear_speed):
         """
@@ -230,13 +284,12 @@ class Lab2:
         # TODO
         pass # delete this when you implement your code
 
-
-
     def run(self):
         #self.send_speed(0.2, 0)
         #self.drive(2, 0.2)
         #self.rotate(1.57, 0.3)
         rospy.spin()
+
 
 if __name__ == '__main__':
     Lab2().run()
