@@ -44,9 +44,10 @@ class PathPlanner:
         :param y [int] The cell Y coordinate.
         :return  [int] The index.
         """
-        index = mapdata.cells.y * mapdata.width + mapdata.cells.x
+        index = y * mapdata.info.width + x
+        print(index)
         return index
-        pass
+        
 
 
 
@@ -62,7 +63,7 @@ class PathPlanner:
         """
         distance = (math.sqrt((x2 - x1)**2 + (y2 - y1)**2))
         return distance
-        pass
+        
         
 
 
@@ -79,15 +80,13 @@ class PathPlanner:
         # gc.x and gc.y are the grid coordinates
         # resolution is the map resolution
         # origin.x and origin.y are the position of the origin in the world
-        wp.x = (gc.x + 0.5) * mapdata.info.resolution + mapdata.info.origin.point.x
-        wp.y = (gc.y + 0.5) * mapdata.info.resolution + mapdata.info.origin.point.y
+        wp_x = (x + 0.5) * mapdata.info.resolution + mapdata.info.origin.position.x
+        wp_y = (y + 0.5) * mapdata.info.resolution + mapdata.info.origin.position.y
         worldPoint = Point()
-        worldPoint.x = wp.x
-        worldPoint.y = wp.y
-        print(mapdata.info.origin)
-        print(worldPoint)
+        worldPoint.x = wp_x
+        worldPoint.y = wp_y
         return worldPoint
-        pass
+        
 
 
         
@@ -143,6 +142,9 @@ class PathPlanner:
         :return        [boolean]       True if the cell is walkable, False otherwise
         """
         ### REQUIRED CREDIT
+
+        #kernel
+        # -> Erosion -> dilation
         pass
 
                
@@ -269,9 +271,9 @@ class PathPlanner:
         """
         Runs the node until Ctrl-C is pressed.
         """
+        
         mapdata = self.request_map()
-        self.world_to_grid(mapdata, 1)
-        print('hi')
+        
         rospy.spin()
 
 
