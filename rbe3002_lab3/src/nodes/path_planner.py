@@ -228,7 +228,7 @@ class PathPlanner:
             resp1 = mapdata()
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
-
+        # print(resp1.map)
         return resp1.map
 
 
@@ -246,34 +246,51 @@ class PathPlanner:
         ## Inflate the obstacles where necessary
         
         newmap = mapdata
+        newmap.data = list(mapdata.data)
         CSpace = []
 
-        if (padding > 0):
-            # for i in range(0, len(mapdata.data)):
-            for i in range(0, len(mapdata.data)):
-                if (mapdata.data[i] == 100):
-                    grid = PathPlanner.index_to_grid(mapdata, i)
-                    CSpace.append((PathPlanner.neighbors_of_8(mapdata, grid[0], grid[1])))
+        for h in range(0, padding):
 
-                # for j in range(0, len(CSpace)):
-            print(len(CSpace))
-            # print(CSpace)
-            for j in range(0,len(CSpace)):
-                print(CSpace[j])
-                # temp_x = (CSpace[j])[0]
-                # temp_y = (CSpace[j])[1]
-        #         temp_x = 0
-        #         temp_y = 0
-        #         # print(temp_x, temp_y)
-        #         paddindex = PathPlanner.grid_to_index[newmap, temp_x, temp_y]
-        #         newmap.data[paddindex] = 100
+            if (padding > 0):
+                # for i in range(0, len(mapdata.data)):
+                for i in range(0, len(newmap.data)):
+                    if (newmap.data[i] == 100):
+                        grid = PathPlanner.index_to_grid(newmap, i)
+                        # CSpace.append((PathPlanner.neighbors_of_8(mapdata, grid[0], grid[1])))
+                        neighbors = PathPlanner.neighbors_of_8(newmap, grid[0], grid[1])
+                        for k in neighbors:
+                            if k not in CSpace:
+                                CSpace.append(k)
 
-        #     padding -= 1
-        #     if (not(padding == 0)):
-        #         calc_cspace(newmap, n - 1)
+                    # for j in range(0, len(CSpace)):
+                # print(len(CSpace))
+                #print(CSpace)
+                for j in range(0,len(CSpace)):
+                    # print(CSpace[j])
+                    temp_x = CSpace[j][0]
+                    temp_y = CSpace[j][1]
+                    # temp_x = 0
+                    # temp_y = 0
+                    # print(temp_x, temp_y)
+                    paddindex = PathPlanner.grid_to_index(newmap, temp_x, temp_y)
+                    #print(paddindex)
+                    #print(newmap.data)
+                    newmap.data[paddindex] = 100
 
-        # ## Create a GridCells message and publish it
-        # self.expanded_cells_pub.publish(newmap)
+                # padding -= 1
+                # if (not(padding == 0)):
+                #     self.calc_cspace(newmap, padding)
+
+        # # ## Create a GridCells message and publish it
+        for i in range(0,len(CSpace)):
+            CSpace[i] = PathPlanner.grid_to_world(newmap, CSpace[i][0], CSpace[i][1])
+
+        gridCell = GridCells()
+        gridCell.header.frame_id = 'map'
+        gridCell.cell_width = newmap.info.resolution
+        gridCell.cell_height = newmap.info.resolution
+        gridCell.cells = CSpace
+        self.Cspace_pub.publish(gridCell)
 
     
     def a_star(self, mapdata, start, goal):
@@ -337,6 +354,7 @@ class PathPlanner:
         """
         
         mapdata = self.request_map()
+        # print(mapdata)
         # worldPoint = Point()
         # worldPoint.x = -3.95
         # worldPoint.y = -4.66
@@ -348,7 +366,7 @@ class PathPlanner:
 
         # PathPlanner.neighbors_of_8(mapdata,grid[0],grid[1])
 
-        self.calc_cspace(mapdata, 2)
+        self.calc_cspace(mapdata, 3)
         # PathPlanner.index_to_grid(mapdata, 74)
         
         rospy.spin()
