@@ -45,10 +45,24 @@ class PathPlanner:
         :return  [int] The index.
         """
         index = y * mapdata.info.width + x
-        print(index)
+        # print(index)
         return index
         
 
+    @staticmethod
+    def index_to_grid(mapdata, i):
+        """
+        Returns the index corresponding to the given (x,y) coordinates in the occupancy grid.
+        :param x [int] The cell X coordinate.
+        :param y [int] The cell Y coordinate.
+        :return  [int] The index.
+        """
+        y = math.floor(i / mapdata.info.width)
+        x = i - y * mapdata.info.width
+        x = int(x)
+        y = int(y)
+        # print(x, y)
+        return (x, y)
 
 
     @staticmethod
@@ -195,8 +209,6 @@ class PathPlanner:
                     if (PathPlanner.is_cell_walkable(mapdata, i, j)):
                         walkable_neighbours.append((i, j))
 
-        
-        print(walkable_neighbours)
         return walkable_neighbours
         
     
@@ -216,7 +228,7 @@ class PathPlanner:
             resp1 = mapdata()
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
-
+        # print(resp1.map)
         return resp1.map
 
 
@@ -226,14 +238,59 @@ class PathPlanner:
         Calculates the C-Space, i.e., makes the obstacles in the map thicker.
         Publishes the list of cells that were added to the original map.
         :param mapdata [OccupancyGrid] The map data.
-        :param padding [iresoltion - x_anchorh cell in the occupancy grid """
+        :param padding [int]           The number of cells around the obstacles.
+        :return        [OccupancyGrid] The C-Space
+        """
+        
+        
         ## Inflate the obstacles where necessary
-        # TODO
-        ## Create a GridCells message and publish it
-        # TODO
-        ## Return the C-space
-        pass
+        
+        newmap = mapdata
+        newmap.data = list(mapdata.data)
+        CSpace = []
 
+        for h in range(0, padding):
+
+            if (padding > 0):
+                # for i in range(0, len(mapdata.data)):
+                for i in range(0, len(newmap.data)):
+                    if (newmap.data[i] == 100):
+                        grid = PathPlanner.index_to_grid(newmap, i)
+                        # CSpace.append((PathPlanner.neighbors_of_8(mapdata, grid[0], grid[1])))
+                        neighbors = PathPlanner.neighbors_of_8(newmap, grid[0], grid[1])
+                        for k in neighbors:
+                            if k not in CSpace:
+                                CSpace.append(k)
+
+                    # for j in range(0, len(CSpace)):
+                # print(len(CSpace))
+                #print(CSpace)
+                for j in range(0,len(CSpace)):
+                    # print(CSpace[j])
+                    temp_x = CSpace[j][0]
+                    temp_y = CSpace[j][1]
+                    # temp_x = 0
+                    # temp_y = 0
+                    # print(temp_x, temp_y)
+                    paddindex = PathPlanner.grid_to_index(newmap, temp_x, temp_y)
+                    #print(paddindex)
+                    #print(newmap.data)
+                    newmap.data[paddindex] = 100
+
+                # padding -= 1
+                # if (not(padding == 0)):
+                #     self.calc_cspace(newmap, padding)
+
+        # # ## Create a GridCells message and publish it
+        for i in range(0,len(CSpace)):
+            CSpace[i] = PathPlanner.grid_to_world(newmap, CSpace[i][0], CSpace[i][1])
+
+        gridCell = GridCells()
+        gridCell.header.frame_id = 'map'
+        gridCell.cell_width = newmap.info.resolution
+        gridCell.cell_height = newmap.info.resolution
+        gridCell.cells = CSpace
+        self.Cspace_pub.publish(gridCell)
 
     
     def a_star(self, mapdata, start, goal):
@@ -344,16 +401,20 @@ class PathPlanner:
         """
         
         mapdata = self.request_map()
-        worldPoint = Point()
-        worldPoint.x = -3.95
-        worldPoint.y = -4.66
+        # print(mapdata)
+        # worldPoint = Point()
+        # worldPoint.x = -3.95
+        # worldPoint.y = -4.66
 
-        grid = PathPlanner.world_to_grid(mapdata, worldPoint)
-        #print(grid)
+        # grid = PathPlanner.world_to_grid(mapdata, worldPoint)
+        # #print(grid)
 
-        #print(PathPlanner.is_cell_walkable(mapdata,grid[0],grid[1]))
+        # #print(PathPlanner.is_cell_walkable(mapdata,grid[0],grid[1]))
 
-        PathPlanner.neighbors_of_8(mapdata,grid[0],grid[1])
+        # PathPlanner.neighbors_of_8(mapdata,grid[0],grid[1])
+
+        self.calc_cspace(mapdata, 3)
+        # PathPlanner.index_to_grid(mapdata, 74)
         
         rospy.spin()
 
