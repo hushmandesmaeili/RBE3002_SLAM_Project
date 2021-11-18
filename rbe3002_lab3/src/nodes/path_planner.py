@@ -237,8 +237,55 @@ class PathPlanner:
 
     
     def a_star(self, mapdata, start, goal):
+        """
+        :param mapdata [OccupancyGrid] The map data.
+        :param start [PoseStamped] The start point of the path
+        :param goal [PoseStamped] The goal point of the path
+
+        """
         ### REQUIRED CREDIT
         rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start[0], start[1], goal[0], goal[1]))
+        frontier = PriorityQueue()
+        frontier.put(start, 0)         ## (OBJECT, PRIORITY)
+        self.frontier_pub.publish(frontier)
+        came_from = {}                 ##(KEY, VALUE)
+        cost_so_far = {}                       ## GRAPH IS MAPDATA
+        came_from[start] = None                
+        cost_so_far[start] = 0
+        while not frontier.empty():
+            current = frontier.get()    ## CURRENT, START, AND GOAL ARE POSESTAMPED MESSAGES
+            self.frontier_pub(frontier)
+            if current == goal:
+                break
+            for next in self.neighbors_of_8(mapdata, current.pose.position.x, current.pose.position.y):
+                new_cost = cost_so_far[current] + self.find_cost(current, next)
+                if next not in cost_so_far or new_cost < cost_so_far[next]:
+                    cost_so_far[next] = new_cost
+                    priority = new_cost + self.heuristic(goal, next)
+                    frontier.put(next, priority)
+                    came_from[next] = current
+                    self.visited_pub.publish(came_from)
+        return frontier
+
+    
+    def find_cost(first, second):
+        ### CALCULATES THE COST TO GO FROM THE CURRENT NODE TO THE NEXT
+        x_current = first.pose.position.x
+        y_current = first.pose.position.y
+        x_goal = second.pose.position.x
+        y_goal = second.pose.position.y
+        cost = euclidean_distance(x_current, y_current, x_goal, y_goal)
+        return cost
+
+
+    def heuristic(goal, point):
+        ### CALCULATES PREDICTED COST OF GETTING TO FROM GOAL TO A POINT
+        x_point = point.pose.position.x
+        y_point = point.pose.position.y
+        x_goal = goal.pose.position.x
+        y_goal = goal.pose.position.y
+        predicted_cost = abs(x_goal - x_point) + abs(y_goal - y_point)
+        return predicted_cost
 
 
     
