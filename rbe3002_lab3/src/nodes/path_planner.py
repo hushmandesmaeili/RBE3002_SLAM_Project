@@ -112,7 +112,7 @@ class PathPlanner:
         gc_x = int((wp.x - origin_x) / resolution)
         gc_y = int((wp.y - origin_y) / resolution)
 
-        return [(gc_x, gc_y)]
+        return (gc_x, gc_y)
 
 
 
@@ -141,13 +141,17 @@ class PathPlanner:
         :param y       [int]           The Y coordinate in the grid.
         :return        [boolean]       True if the cell is walkable, False otherwise
         """
-        ### REQUIRED CREDIT
 
-        #kernel
-        # -> Erosion -> dilation
-        pass
-
-               
+        index = PathPlanner.grid_to_index(mapdata,x,y)
+        
+        if (x >= 0 and x < mapdata.info.width and y >= 0 and y < mapdata.info.height):
+            if(mapdata.data[index] == 0):
+                return True
+            else: 
+                return False
+        else:
+            return False
+                     
 
     @staticmethod
     def neighbors_of_4(mapdata, x, y):
@@ -158,10 +162,21 @@ class PathPlanner:
         :param y       [int]           The Y coordinate in the grid.
         :return        [[(int,int)]]   A list of walkable 4-neighbors.
         """
-        ### REQUIRED CREDIT
-        pass
+        walkable_neighbours = []
+        
+        if (PathPlanner.is_cell_walkable(mapdata,x,y-1)):
+            walkable_neighbours.append((x,y-1))
+        if (PathPlanner.is_cell_walkable(mapdata,x,y+1)):
+            walkable_neighbours.append((x,y+1))
 
-    
+        if (PathPlanner.is_cell_walkable(mapdata,x-1,y)):
+            walkable_neighbours.append((x-1,y))
+        if (PathPlanner.is_cell_walkable(mapdata,x+1,y)):
+            walkable_neighbours.append((x+1,y))
+
+        return walkable_neighbours
+
+
     
     @staticmethod
     def neighbors_of_8(mapdata, x, y):
@@ -172,9 +187,18 @@ class PathPlanner:
         :param y       [int]           The Y coordinate in the grid.
         :return        [[(int,int)]]   A list of walkable 8-neighbors.
         """
-        ### REQUIRED CREDIT
-        pass
+        walkable_neighbours = []
+        
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if (not(i == x and j == y)):
+                    if (PathPlanner.is_cell_walkable(mapdata, i, j)):
+                        walkable_neighbours.append((i, j))
 
+        
+        print(walkable_neighbours)
+        return walkable_neighbours
+        
     
     
     @staticmethod
@@ -273,6 +297,16 @@ class PathPlanner:
         """
         
         mapdata = self.request_map()
+        worldPoint = Point()
+        worldPoint.x = -3.95
+        worldPoint.y = -4.66
+
+        grid = PathPlanner.world_to_grid(mapdata, worldPoint)
+        #print(grid)
+
+        #print(PathPlanner.is_cell_walkable(mapdata,grid[0],grid[1]))
+
+        PathPlanner.neighbors_of_8(mapdata,grid[0],grid[1])
         
         rospy.spin()
 
