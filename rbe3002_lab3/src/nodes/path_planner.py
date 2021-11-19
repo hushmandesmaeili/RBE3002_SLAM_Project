@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import math
+import time
 import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
@@ -280,7 +281,7 @@ class PathPlanner:
 
                 # padding -= 1
                 # if (not(padding == 0)):
-                #     self.calc_cspace(newmap, padding)
+                #     self.calc_cspace(newmap, padding)mapdata.info.resolution
 
         # # ## Create a GridCells message and publish it
         for i in range(0,len(CSpace)):
@@ -292,6 +293,8 @@ class PathPlanner:
         gridCell.cell_height = newmap.info.resolution
         gridCell.cells = CSpace
         self.Cspace_pub.publish(gridCell)
+
+        return newmap
 
     
     def a_star(self, mapdata, start, goal):
@@ -305,50 +308,84 @@ class PathPlanner:
         #rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start.pose.position[0], start.pose.position[1], goal.pose.position[0], goal.pose.position[1]))
         frontier = PriorityQueue()
         frontier.put(start, 0)         ## (OBJECT, PRIORITY)
-        print(frontier.get_queue())
+        #print(frontier.get_queue())
         # self.frontier_pub.publish(frontier)
         came_from = {}                 ##(KEY, VALUE)
         cost_so_far = {}                       ## GRAPH IS MAPDATA
         came_from[start] = None                
         cost_so_far[start] = 0
+        worldPoint = Point()
+        frontier_gridcell = GridCells()
+        frontier_gridcell.header.frame_id = 'map'
+        frontier_gridcell.cell_width = mapdata.info.resolution
+        frontier_gridcell.cell_height = mapdata.info.resolution
+        visited_gridcell = GridCells()
+        visited_gridcell.header.frame_id = 'map'
+        visited_gridcell.cell_width = mapdata.info.resolution
+        visited_gridcell.cell_height = mapdata.info.resolution
+        pointList = []
         while not frontier.empty():
-            current = frontier.get()    ## CURRENT, START, AND GOAL ARE POSESTAMPED MESSAGES
-            frontier_gridcell = GridCells()
-            frontier_gridcell.header.frame_id = 'map'
-            if came_from[start] == None:
-                frontier_gridcell.cell_width = 0
-                frontier_gridcell.cell_height = 0
-            else:
-                frontier_gridcell.cell_width = mapdata.info.resolution
-                frontier_gridcell.cell_height = mapdata.info.resolution
-            frontier_gridcell.cells = frontier.get_queue()
+            current = frontier.get()    ## FRONTIER CURRENT, START, AND GOAL ARE POSESTAMPED MESSAGES
+            # frontier_gridcell = GridCells()
+            # frontier_gridcell.header.frame_id = 'map'
+            # frontier_gridcell.cell_width = mapdata.info.resolution
+            # frontier_gridcell.cell_height = mapdata.info.resolutionf
+            # pointList = []
+            if (not(came_from[current] == None)):
+                for i in came_from:
+                    worldPoint.x = i.pose.position.x
+                    worldPoint.y = i.pose.position.y
+                    pointList.append(worldPoint)
+                visited_gridcell.cells = pointList
+                self.visited_pub.publish(visited_gridcell)
+            for i in frontier.get_queue():
+                worldPoint.x = (i[1]).pose.position.x
+                worldPoint.y = (i[1]).pose.position.y
+                pointList.append(worldPoint)
+            frontier_gridcell.cells = pointList
+            print(pointList)
             self.frontier_pub.publish(frontier_gridcell)
+            rospy.sleep(1)
             if current == goal:
                 break
-            for next in self.neighbors_of_8(mapdata, int(current.pose.position.x), int(current.pose.position.y)):
-                new_cost = cost_so_far[current] + self.find_cost(current, next)
-                if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    cost_so_far[next] = new_cost
-                    priority = new_cost + self.heuristic(goal, next)
-                    frontier.put(next, priority)
-                    came_from[next] = current
-                    print(frontier.get_queue())
-                    self.visited_pub.publish(came_from)
+            worldPoint.x = current.pose.position.x
+            worldPoint.y = current.pose.position.y
+            gridPoint = PathPlanner.world_to_grid(mapdata, worldPoint)
+            for next in self.neighbors_of_8(mapdata, gridPoint[0], gridPoint[1]):
+                #print(cost_so_far[current])
+                worldPoint = PathPlanner.grid_to_world(mapdata, next[0], next[1])
+                newNext = PoseStamped()
+                newNext.pose.position = worldPoint
+                #print(newNext)
+                new_cost = cost_so_far[current] + self.find_cost(current, newNext)
+                if newNext not in cost_so_far or new_cost < cost_so_far[newNext]:
+                    cost_so_far[newNext] = new_cost
+                    priority = new_cost + self.heuristic(goal, newNext)
+                    frontier.put(newNext, priority)
+                    came_from[newNext] = current
+                    #print(frontier.get_queue())
+                    #print(came_from)
+                    # for i in came_from:
+                    #     worldPoint.x = i.pose.position.x
+                    #     worldPoint.y = i.pose.position.y
+                    #     pointList.append(worldPoint)
+                    # visited_gridcell.cells = pointList
+                    # self.visited_pub.publish(visited_gridcell)
             # print(frontier.get_queue())
         return frontier
 
     
-    def find_cost(first, second):
+    def find_cost(self, first, second):
         ### CALCULATES THE COST TO GO FROM THE CURRENT NODE TO THE NEXT
         x_current = first.pose.position.x
         y_current = first.pose.position.y
         x_goal = second.pose.position.x
         y_goal = second.pose.position.y
-        cost = euclidean_distance(x_current, y_current, x_goal, y_goal)
+        cost = self.euclidean_distance(x_current, y_current, x_goal, y_goal)
         return cost
 
 
-    def heuristic(goal, point):
+    def heuristic(self, goal, point):
         ### CALCULATES PREDICTED COST OF GETTING TO FROM GOAL TO A POINT
         x_point = point.pose.position.x
         y_point = point.pose.position.y
