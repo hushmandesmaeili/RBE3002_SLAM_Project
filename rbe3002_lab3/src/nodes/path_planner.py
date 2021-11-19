@@ -5,6 +5,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
+from priority_queue import PriorityQueue
 
 
 
@@ -301,27 +302,39 @@ class PathPlanner:
 
         """
         ### REQUIRED CREDIT
-        rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start[0], start[1], goal[0], goal[1]))
+        #rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start.pose.position[0], start.pose.position[1], goal.pose.position[0], goal.pose.position[1]))
         frontier = PriorityQueue()
         frontier.put(start, 0)         ## (OBJECT, PRIORITY)
-        self.frontier_pub.publish(frontier)
+        print(frontier.get_queue())
+        # self.frontier_pub.publish(frontier)
         came_from = {}                 ##(KEY, VALUE)
         cost_so_far = {}                       ## GRAPH IS MAPDATA
         came_from[start] = None                
         cost_so_far[start] = 0
         while not frontier.empty():
             current = frontier.get()    ## CURRENT, START, AND GOAL ARE POSESTAMPED MESSAGES
-            self.frontier_pub(frontier)
+            frontier_gridcell = GridCells()
+            frontier_gridcell.header.frame_id = 'map'
+            if came_from[start] == None:
+                frontier_gridcell.cell_width = 0
+                frontier_gridcell.cell_height = 0
+            else:
+                frontier_gridcell.cell_width = mapdata.info.resolution
+                frontier_gridcell.cell_height = mapdata.info.resolution
+            frontier_gridcell.cells = frontier.get_queue()
+            self.frontier_pub.publish(frontier_gridcell)
             if current == goal:
                 break
-            for next in self.neighbors_of_8(mapdata, current.pose.position.x, current.pose.position.y):
+            for next in self.neighbors_of_8(mapdata, int(current.pose.position.x), int(current.pose.position.y)):
                 new_cost = cost_so_far[current] + self.find_cost(current, next)
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
                     cost_so_far[next] = new_cost
                     priority = new_cost + self.heuristic(goal, next)
                     frontier.put(next, priority)
                     came_from[next] = current
+                    print(frontier.get_queue())
                     self.visited_pub.publish(came_from)
+            # print(frontier.get_queue())
         return frontier
 
     
@@ -365,6 +378,9 @@ class PathPlanner:
         :return     [Path]        A Path message (the coordinates are expressed in the world)
         """
         ### REQUIRED CREDIT
+        # path_message = Path()
+        # path_message.poses = path
+        # return path_message
         rospy.loginfo("Returning a Path message")
 
 
@@ -413,7 +429,15 @@ class PathPlanner:
 
         # PathPlanner.neighbors_of_8(mapdata,grid[0],grid[1])
 
-        self.calc_cspace(mapdata, 3)
+        final_map = self.calc_cspace(mapdata, 2)
+        start = PoseStamped()
+        start.pose.position.x = 5.04
+        start.pose.position.y = 3.22
+
+        end = PoseStamped()
+        end.pose.position.x = 1.46
+        end.pose.position.y = -3.94
+        self.a_star(final_map, start, end)
         # PathPlanner.index_to_grid(mapdata, 74)
         
         rospy.spin()
