@@ -1,0 +1,9 @@
+<launch>
+
+	<node name="map_server" pkg="map_server" type="map_server" args="$(find rbe3002_lab3)/src/maps/simple_map.yaml"/>
+
+    	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find rbe3002_lab3)/src/rviz/rbe3002_lab3.rviz"/>
+
+    	<node pkg="rbe3002_lab3" type="path_planner.py" name="lab3"/>
+
+</launch>
