@@ -101,6 +101,7 @@ class PathPlanner:
         worldPoint = Point()
         worldPoint.x = wp_x
         worldPoint.y = wp_y
+
         return worldPoint
         
 
@@ -296,83 +297,6 @@ class PathPlanner:
 
         return newmap
 
-    
-    # def a_star(self, mapdata, start, goal):
-    #     """
-    #     :param mapdata [OccupancyGrid] The map data.
-    #     :param start [PoseStamped] The start point of the path
-    #     :param goal [PoseStamped] The goal point of the path
-
-    #     """
-    #     ### REQUIRED CREDIT
-    #     #rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start.pose.position[0], start.pose.position[1], goal.pose.position[0], goal.pose.position[1]))
-    #     frontier = PriorityQueue()
-    #     frontier.put(start, 0)         ## (OBJECT, PRIORITY)
-    #     #print(frontier.get_queue())
-    #     # self.frontier_pub.publish(frontier)
-    #     came_from = {}                 ##(KEY, VALUE)
-    #     cost_so_far = {}                       ## GRAPH IS MAPDATA
-    #     came_from[start] = None                
-    #     cost_so_far[start] = 0
-    #     worldPoint = Point()
-    #     frontier_gridcell = GridCells()
-    #     frontier_gridcell.header.frame_id = 'map'
-    #     frontier_gridcell.cell_width = mapdata.info.resolution
-    #     frontier_gridcell.cell_height = mapdata.info.resolution
-    #     visited_gridcell = GridCells()
-    #     visited_gridcell.header.frame_id = 'map'
-    #     visited_gridcell.cell_width = mapdata.info.resolution
-    #     visited_gridcell.cell_height = mapdata.info.resolution
-    #     pointList = []
-    #     while not frontier.empty():
-    #         current = frontier.get()    ## FRONTIER CURRENT, START, AND GOAL ARE POSESTAMPED MESSAGES
-    #         # frontier_gridcell = GridCells()
-    #         # frontier_gridcell.header.frame_id = 'map'
-    #         # frontier_gridcell.cell_width = mapdata.info.resolution
-    #         # frontier_gridcell.cell_height = mapdata.info.resolutionf
-    #         # pointList = []
-    #         if (not(came_from[current] == None)):
-    #             for i in came_from:
-    #                 worldPoint.x = i.pose.position.x
-    #                 worldPoint.y = i.pose.position.y
-    #                 pointList.append(worldPoint)
-    #             visited_gridcell.cells = pointList
-    #             self.visited_pub.publish(visited_gridcell)
-    #         for i in frontier.get_queue():
-    #             worldPoint.x = (i[1]).pose.position.x
-    #             worldPoint.y = (i[1]).pose.position.y
-    #             pointList.append(worldPoint)
-    #         frontier_gridcell.cells = pointList
-    #         print(pointList)
-    #         self.frontier_pub.publish(frontier_gridcell)
-    #         rospy.sleep(1)
-    #         if current == goal:
-    #             break
-    #         worldPoint.x = current.pose.position.x
-    #         worldPoint.y = current.pose.position.y
-    #         gridPoint = PathPlanner.world_to_grid(mapdata, worldPoint)
-    #         for next in self.neighbors_of_8(mapdata, gridPoint[0], gridPoint[1]):
-    #             #print(cost_so_far[current])
-    #             worldPoint = PathPlanner.grid_to_world(mapdata, next[0], next[1])
-    #             newNext = PoseStamped()
-    #             newNext.pose.position = worldPoint
-    #             #print(newNext)
-    #             new_cost = cost_so_far[current] + self.find_cost(current, newNext)
-    #             if newNext not in cost_so_far or new_cost < cost_so_far[newNext]:
-    #                 cost_so_far[newNext] = new_cost
-    #                 priority = new_cost + self.heuristic(goal, newNext)
-    #                 frontier.put(newNext, priority)
-    #                 came_from[newNext] = current
-    #                 #print(frontier.get_queue())
-    #                 #print(came_from)
-    #                 # for i in came_from:
-    #                 #     worldPoint.x = i.pose.position.x
-    #                 #     worldPoint.y = i.pose.position.y
-    #                 #     pointList.append(worldPoint)
-    #                 # visited_gridcell.cells = pointList
-    #                 # self.visited_pub.publish(visited_gridcell)
-    #         # print(frontier.get_queue())
-    #     return frontier
 
     def a_star(self, mapdata, start, goal):
         """
@@ -383,66 +307,89 @@ class PathPlanner:
         """
         ### REQUIRED CREDIT
         #rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start.pose.position[0], start.pose.position[1], goal.pose.position[0], goal.pose.position[1]))
+        start = PathPlanner.PoseStamped_to_GridCoor(mapdata, start)
+        goal = PathPlanner.PoseStamped_to_GridCoor(mapdata, goal)
+        
         frontier = PriorityQueue()
         frontier.put(start, 0)         ## (OBJECT, PRIORITY)
-        #print(frontier.get_queue())
-        # self.frontier_pub.publish(frontier)
+
         came_from = {}                 ##(KEY, VALUE)
         cost_so_far = {}                       ## GRAPH IS MAPDATA
         came_from[start] = None                
         cost_so_far[start] = 0
-        worldPoint = Point()
-        # frontier_gridcell = GridCells()
-        # frontier_gridcell.header.frame_id = 'map'
-        # frontier_gridcell.cell_width = mapdata.info.resolution
-        # frontier_gridcell.cell_height = mapdata.info.resolution
-        # visited_gridcell = GridCells()
-        # visited_gridcell.header.frame_id = 'map'
-        # visited_gridcell.cell_width = mapdata.info.resolution
-        # visited_gridcell.cell_height = mapdata.info.resolution
-        # pointList = []
+        visited = []
+
         while not frontier.empty():
-            current = frontier.get()    ## FRONTIER CURRENT, START, AND GOAL ARE POSESTAMPED MESSAGES
-            # frontier_gridcell = GridCells()
-            # frontier_gridcell.header.frame_id = 'map'
-            # frontier_gridcell.cell_width = mapdata.info.resolution
-            # frontier_gridcell.cell_height = mapdata.info.resolutionf
-            # pointList = []
-            # if (not(came_from[current] == None)):
-            #     for i in came_from:
-            #         worldPoint.x = i.pose.position.x
-            #         worldPoint.y = i.pose.position.y
-            #         pointList.append(worldPoint)
-            #     visited_gridcell.cells = pointList
-            #     self.visited_pub.publish(visited_gridcell)
-            # for i in frontier.get_queue():
-            #     worldPoint.x = (i[1]).pose.position.x
-            #     worldPoint.y = (i[1]).pose.position.y
-            #     pointList.append(worldPoint)
-            # frontier_gridcell.cells = pointList
-            # print(pointList)
-            # self.frontier_pub.publish(frontier_gridcell)
-            # rospy.sleep(1)
+            rospy.sleep(0.001)
+
+            current = frontier.get()    ## FRONTIER CURRENT, START, AND GOAL ARE Grid Coordinates 
+            print(current)
+            
             if current == goal:
-                # while ()
+                visited.append(current)
+                self.publishFrontier(mapdata, frontier)
+                self.publishVisited(mapdata, visited)
                 break
-            worldPoint.x = current.pose.position.x
-            worldPoint.y = current.pose.position.y
-            gridPoint = PathPlanner.world_to_grid(mapdata, worldPoint)
-            for next in self.neighbors_of_8(mapdata, gridPoint[0], gridPoint[1]):
-                #print(cost_so_far[current])
-                worldPoint = PathPlanner.grid_to_world(mapdata, next[0], next[1])
-                newNext = PoseStamped()
-                newNext.pose.position = worldPoint
-                #print(newNext)
-                new_cost = cost_so_far[current] + self.find_cost(current, newNext)
-                if newNext not in cost_so_far or new_cost < cost_so_far[newNext]:
-                    cost_so_far[newNext] = new_cost
-                    priority = new_cost + self.heuristic(goal, newNext)
-                    frontier.put(newNext, priority)
-                    came_from[newNext] = current
+
+            for next in self.neighbors_of_8(mapdata, current[0], current[1]):
+                current_pose_stamped = PathPlanner.Grid_to_PoseStamped(mapdata, current)
+                next_pose_stamped = PathPlanner.Grid_to_PoseStamped(mapdata, next)
+
+                new_cost = cost_so_far[current] + self.find_cost(current_pose_stamped, next_pose_stamped)
+
+                if next not in cost_so_far or new_cost < cost_so_far[next]:
+                    cost_so_far[next] = new_cost
+
+                    goal_pose_stamped = PathPlanner.Grid_to_PoseStamped(mapdata, next)
+                    priority = new_cost + self.heuristic(goal_pose_stamped, next_pose_stamped)
+
+                    frontier.put(next, priority)
+                    came_from[next] = current
+
+            visited.append(current)
+            self.publishFrontier(mapdata, frontier)
+            self.publishVisited(mapdata, visited)
 
         return frontier
+
+    def publishFrontier(self, mapdata, priority_queue):
+        frontier_gridcell = GridCells()
+        frontier_gridcell.header.frame_id = 'map'
+        frontier_gridcell.cell_width = mapdata.info.resolution
+        frontier_gridcell.cell_height = mapdata.info.resolution
+
+        gridList = []
+
+        for elem in priority_queue.get_queue():
+            gridList.append(elem[1])
+
+        pointList = PathPlanner.gridList_to_pointList(mapdata, gridList)
+
+        frontier_gridcell.cells = pointList
+
+        self.frontier_pub.publish(frontier_gridcell)
+
+    def publishVisited(self, mapdata, visited_list):
+        visited_gridcell = GridCells()
+        visited_gridcell.header.frame_id = 'map'
+        visited_gridcell.cell_width = mapdata.info.resolution
+        visited_gridcell.cell_height = mapdata.info.resolution
+
+        gridList = visited_list
+        pointList = PathPlanner.gridList_to_pointList(mapdata, gridList)
+
+        visited_gridcell.cells = pointList
+
+        self.visited_pub.publish(visited_gridcell)
+
+    @staticmethod
+    def gridList_to_pointList(mapdata, gridList):
+        pointList = []
+
+        for elem in gridList:
+            pointList.append(PathPlanner.grid_to_world(mapdata, elem[0], elem[1]))
+
+        return pointList
 
     @staticmethod
     def PoseStamped_to_GridCells(mapdata, pStamped):
@@ -451,15 +398,39 @@ class PathPlanner:
         gridcell.cell_width = mapdata.info.resolution
         gridcell.cell_height = mapdata.info.resolutionf
 
-        worldPoint = Point()
-        worldPoint.x = pStamped.pose.position.x
-        worldPoint.y = (i[1]).pose.position.y
+        worldPoint = PathPlanner.PoseStamped_to_WorldPoint(pStamped)
         gridcell.cells = worldPoint
 
         return gridcell
 
-    # @staticmethod
-    # def PoseStamped_to_WorldPoint()
+    @staticmethod
+    def Grid_to_PoseStamped(mapdata, grid):
+        pose = PoseStamped()
+        grid_x = grid[0]
+        grid_y = grid[1]
+
+        worldPoint = PathPlanner.grid_to_world(mapdata, grid_x, grid_y)
+        
+        pose.pose.position.x = worldPoint.x
+        pose.pose.position.y = worldPoint.y
+
+        return pose
+
+    @staticmethod
+    def PoseStamped_to_GridCoor(mapdata, pStamped):
+        worldPoint = PathPlanner.PoseStamped_to_WorldPoint(pStamped)
+
+        grid_cell = PathPlanner.world_to_grid(mapdata, worldPoint)
+
+        return grid_cell
+
+    @staticmethod
+    def PoseStamped_to_WorldPoint(pStamped):
+        worldPoint = Point()
+        worldPoint.x = pStamped.pose.position.x
+        worldPoint.y = pStamped.pose.position.y
+
+        return worldPoint
     
     def find_cost(self, first, second):
         ### CALCULATES THE COST TO GO FROM THE CURRENT NODE TO THE NEXT
@@ -552,14 +523,14 @@ class PathPlanner:
 
         # PathPlanner.neighbors_of_8(mapdata,grid[0],grid[1])
 
-        final_map = self.calc_cspace(mapdata, 2)
+        final_map = self.calc_cspace(mapdata, 1)
         start = PoseStamped()
-        start.pose.position.x = 5.04
-        start.pose.position.y = 3.22
+        start.pose.position.x = -4.16
+        start.pose.position.y = 5.24
 
         end = PoseStamped()
-        end.pose.position.x = 1.46
-        end.pose.position.y = -3.94
+        end.pose.position.x = 5.38
+        end.pose.position.y = -4.25
         self.a_star(final_map, start, end)
         # PathPlanner.index_to_grid(mapdata, 74)
         
