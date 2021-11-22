@@ -30,6 +30,7 @@ class PathPlanner:
         self.expanded_cells_pub = rospy.Publisher('/path_planner/expanded_cells', GridCells, queue_size=10)
         self.frontier_pub = rospy.Publisher('/path_planner/frontier', GridCells, queue_size=10)
         self.visited_pub = rospy.Publisher('/path_planner/visited', GridCells, queue_size=10)
+        self.path_pub = rospy.Publisher('/path_planner/path', GridCells, queue_size=10)
         ## Initialize the request counter
         # TODO
         ## Sleep to allow roscore to do some housekeeping
@@ -245,7 +246,6 @@ class PathPlanner:
         :return        [OccupancyGrid] The C-Space
         """
         
-        
         ## Inflate the obstacles where necessary
         
         newmap = mapdata
@@ -255,34 +255,22 @@ class PathPlanner:
         for h in range(0, padding):
 
             if (padding > 0):
-                # for i in range(0, len(mapdata.data)):
+                
                 for i in range(0, len(newmap.data)):
+                    
                     if (newmap.data[i] == 100):
                         grid = PathPlanner.index_to_grid(newmap, i)
-                        # CSpace.append((PathPlanner.neighbors_of_8(mapdata, grid[0], grid[1])))
                         neighbors = PathPlanner.neighbors_of_8(newmap, grid[0], grid[1])
+                        
                         for k in neighbors:
                             if k not in CSpace:
                                 CSpace.append(k)
 
-                    # for j in range(0, len(CSpace)):
-                # print(len(CSpace))
-                #print(CSpace)
                 for j in range(0,len(CSpace)):
-                    # print(CSpace[j])
                     temp_x = CSpace[j][0]
                     temp_y = CSpace[j][1]
-                    # temp_x = 0
-                    # temp_y = 0
-                    # print(temp_x, temp_y)
                     paddindex = PathPlanner.grid_to_index(newmap, temp_x, temp_y)
-                    #print(paddindex)
-                    #print(newmap.data)
                     newmap.data[paddindex] = 100
-
-                # padding -= 1
-                # if (not(padding == 0)):
-                #     self.calc_cspace(newmap, padding)mapdata.info.resolution
 
         # # ## Create a GridCells message and publish it
         for i in range(0,len(CSpace)):
@@ -323,7 +311,7 @@ class PathPlanner:
             rospy.sleep(0.001)
 
             current = frontier.get()    ## FRONTIER CURRENT, START, AND GOAL ARE Grid Coordinates 
-            print(current)
+            # print(current)
             
             if current == goal:
                 visited.append(current)
@@ -350,7 +338,17 @@ class PathPlanner:
             self.publishFrontier(mapdata, frontier)
             self.publishVisited(mapdata, visited)
 
-        return frontier
+        path = PathPlanner.CameFrom_to_Path(mapdata, start, goal, came_from)
+        path.reverse()
+
+        # self.publishPath(mapdata, path)
+        optimized = self.optimize_path(path)
+        self.publishPath(mapdata, optimized)
+        
+        path_pose_stamped = self.path_to_message(mapdata, path)
+
+        return path_pose_stamped
+
 
     def publishFrontier(self, mapdata, priority_queue):
         frontier_gridcell = GridCells()
@@ -369,6 +367,7 @@ class PathPlanner:
 
         self.frontier_pub.publish(frontier_gridcell)
 
+
     def publishVisited(self, mapdata, visited_list):
         visited_gridcell = GridCells()
         visited_gridcell.header.frame_id = 'map'
@@ -382,6 +381,36 @@ class PathPlanner:
 
         self.visited_pub.publish(visited_gridcell)
 
+
+    def publishPath(self, mapdata, path_list):
+        path_gridcell = GridCells()
+        path_gridcell.header.frame_id = 'map'
+        path_gridcell.cell_width = mapdata.info.resolution
+        path_gridcell.cell_height = mapdata.info.resolution
+
+        gridList = path_list
+        pointList = PathPlanner.gridList_to_pointList(mapdata, gridList)
+
+        path_gridcell.cells = pointList
+
+        self.path_pub.publish(path_gridcell)
+
+
+    @staticmethod
+    def CameFrom_to_Path(mapdata, start, goal, came_from):
+        path = []
+        path.append(goal)
+
+        current = goal
+
+        while start not in path:
+            print(came_from[current])
+            path.append(came_from[current])
+            current = came_from[current]
+
+        return path
+        
+
     @staticmethod
     def gridList_to_pointList(mapdata, gridList):
         pointList = []
@@ -390,6 +419,7 @@ class PathPlanner:
             pointList.append(PathPlanner.grid_to_world(mapdata, elem[0], elem[1]))
 
         return pointList
+
 
     @staticmethod
     def PoseStamped_to_GridCells(mapdata, pStamped):
@@ -416,6 +446,7 @@ class PathPlanner:
 
         return pose
 
+
     @staticmethod
     def PoseStamped_to_GridCoor(mapdata, pStamped):
         worldPoint = PathPlanner.PoseStamped_to_WorldPoint(pStamped)
@@ -423,6 +454,7 @@ class PathPlanner:
         grid_cell = PathPlanner.world_to_grid(mapdata, worldPoint)
 
         return grid_cell
+
 
     @staticmethod
     def PoseStamped_to_WorldPoint(pStamped):
@@ -432,6 +464,7 @@ class PathPlanner:
 
         return worldPoint
     
+
     def find_cost(self, first, second):
         ### CALCULATES THE COST TO GO FROM THE CURRENT NODE TO THE NEXT
         x_current = first.pose.position.x
@@ -452,7 +485,6 @@ class PathPlanner:
         return predicted_cost
 
 
-    
     @staticmethod
     def optimize_path(path):
         """
@@ -462,6 +494,33 @@ class PathPlanner:
         """
         ### EXTRA CREDIT
         rospy.loginfo("Optimizing path")
+        path_optimized = []
+
+        # Append start of path
+        path_optimized.append(path[0])
+
+        for i in range(1, len(path)):
+            if (i == len(path) - 1):
+                path_optimized.append(path[i])
+            else:
+
+                coor_prev = path[i - 1]
+                coor_current = path[i]
+                coor_next = path[i + 1]
+                
+                x_prev = coor_prev[0]
+                y_prev = coor_prev[1]
+                x_current = coor_current[0]
+                y_current = coor_current[1]
+                x_next = coor_next[0]
+                y_next = coor_next[1]
+
+                if ((not(x_current == x_prev or y_current == y_prev) or not(x_current == x_next or y_current == y_next)) and ((not(abs(x_current - x_prev) == 1 and abs(y_current - y_prev) == 1)) or (not(abs(x_current - x_next) == 1 and abs(y_current - y_next) == 1)))):
+                    path_optimized.append(coor_current)
+                # elif ((not(abs(x_current - x_prev) == 1 and abs(y_current - y_prev) == 1)) or (not(abs(x_current - x_next) == 1 and abs(y_current - y_next) == 1))):
+                #     path_optimized.append(coor_current)
+
+        return path_optimized
 
         
 
@@ -476,6 +535,17 @@ class PathPlanner:
         # path_message.poses = path
         # return path_message
         rospy.loginfo("Returning a Path message")
+
+        path_message = Path()
+        poseList = []
+        path_message.header.frame_id = 'map'
+        # print(path)
+        for grid in path:
+            point = PathPlanner.Grid_to_PoseStamped(mapdata, grid)
+            poseList.append(point)
+        path_message.poses = poseList
+        #print(path_message)
+        return path_message
 
 
         
@@ -501,37 +571,24 @@ class PathPlanner:
         ## Return a Path message
         return self.path_to_message(mapdata, waypoints)
 
-        
-
-
+    
     
     def run(self):
         """
         Runs the node until Ctrl-C is pressed.
         """
         
-        mapdata = self.request_map()
-        # print(mapdata)
-        # worldPoint = Point()
-        # worldPoint.x = -3.95
-        # worldPoint.y = -4.66
+        # mapdata = self.request_map()
 
-        # grid = PathPlanner.world_to_grid(mapdata, worldPoint)
-        # #print(grid)
+        # final_map = self.calc_cspace(mapdata, 1)
+        # start = PoseStamped()
+        # start.pose.position.x = -4.16
+        # start.pose.position.y = 5.24
 
-        # #print(PathPlanner.is_cell_walkable(mapdata,grid[0],grid[1]))
-
-        # PathPlanner.neighbors_of_8(mapdata,grid[0],grid[1])
-
-        final_map = self.calc_cspace(mapdata, 1)
-        start = PoseStamped()
-        start.pose.position.x = -4.16
-        start.pose.position.y = 5.24
-
-        end = PoseStamped()
-        end.pose.position.x = 5.38
-        end.pose.position.y = -4.25
-        self.a_star(final_map, start, end)
+        # end = PoseStamped()
+        # end.pose.position.x = 5.38
+        # end.pose.position.y = -4.25
+        # self.a_star(final_map, start, end)
         # PathPlanner.index_to_grid(mapdata, 74)
         
         rospy.spin()
