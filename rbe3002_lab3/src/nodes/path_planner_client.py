@@ -7,7 +7,7 @@ from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped, Twist
 from priority_queue import PriorityQueue
-from tf.transformations import euler_from_quaternion
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 class PathPlannerClient:
 
@@ -39,21 +39,27 @@ class PathPlannerClient:
 
         # Give ROS time to initial nodes
         rospy.sleep(2)
+        rospy.loginfo("Path planner client node ready")
 
 
     def plan_path_client(self, msg):
 
         ### RETURNS PATH OBJECT
         start = PoseStamped()
-        start.pose.position.x = self.x
-        start.pose.position.y = self.y
-        start.pose.orientation = quaternion_from_euler(0, 0, self.pth)
+        start.header.frame_id = "odom"
+        start.pose.position.x = self.px
+        start.pose.position.y = self.py
+        # start.pose.orientation = quaternion_from_euler(0, 0, self.pth)
+        
         goal = msg
+
+        print(start, goal)
+
         tolerance = 0.1
         rospy.loginfo("Requesting the path")
         rospy.wait_for_service('plan_path')
+        pathdata = rospy.ServiceProxy('plan_path', GetPlan)
         try:
-            pathdata = rospy.ServiceProxy('plan_path', GetPlan)
             resp1 = pathdata(start, goal, tolerance)
             self.path_pub.publish(resp1.plan)
         except rospy.ServiceException as exc:

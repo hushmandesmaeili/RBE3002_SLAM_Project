@@ -48,7 +48,7 @@ class PathPlanner:
         :return  [int] The index.
         """
         index = y * mapdata.info.width + x
-        # print(index)
+        
         return index
         
 
@@ -64,7 +64,7 @@ class PathPlanner:
         x = i - y * mapdata.info.width
         x = int(x)
         y = int(y)
-        # print(x, y)
+
         return (x, y)
 
 
@@ -232,7 +232,6 @@ class PathPlanner:
             resp1 = mapdata()
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
-        # print(resp1.map)
         return resp1.map
 
 
@@ -308,10 +307,9 @@ class PathPlanner:
         visited = []
 
         while not frontier.empty():
-            rospy.sleep(0.001)
+            rospy.sleep(0.01)
 
             current = frontier.get()    ## FRONTIER CURRENT, START, AND GOAL ARE Grid Coordinates 
-            # print(current)
             
             if current == goal:
                 visited.append(current)
@@ -328,7 +326,7 @@ class PathPlanner:
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
                     cost_so_far[next] = new_cost
 
-                    goal_pose_stamped = PathPlanner.Grid_to_PoseStamped(mapdata, next)
+                    goal_pose_stamped = PathPlanner.Grid_to_PoseStamped(mapdata, goal)
                     priority = new_cost + self.heuristic(goal_pose_stamped, next_pose_stamped)
 
                     frontier.put(next, priority)
@@ -342,12 +340,13 @@ class PathPlanner:
         path.reverse()
 
         # self.publishPath(mapdata, path)
-        optimized = self.optimize_path(path)
-        self.publishPath(mapdata, optimized)
+        # optimized = self.optimize_path(path)
+        # self.publishPath(mapdata, optimized)
         
         path_pose_stamped = self.path_to_message(mapdata, path)
 
-        return path_pose_stamped
+        # return path_pose_stamped
+        return path
 
 
     def publishFrontier(self, mapdata, priority_queue):
@@ -404,7 +403,6 @@ class PathPlanner:
         current = goal
 
         while start not in path:
-            print(came_from[current])
             path.append(came_from[current])
             current = came_from[current]
 
@@ -517,8 +515,6 @@ class PathPlanner:
 
                 if ((not(x_current == x_prev or y_current == y_prev) or not(x_current == x_next or y_current == y_next)) and ((not(abs(x_current - x_prev) == 1 and abs(y_current - y_prev) == 1)) or (not(abs(x_current - x_next) == 1 and abs(y_current - y_next) == 1)))):
                     path_optimized.append(coor_current)
-                # elif ((not(abs(x_current - x_prev) == 1 and abs(y_current - y_prev) == 1)) or (not(abs(x_current - x_next) == 1 and abs(y_current - y_next) == 1))):
-                #     path_optimized.append(coor_current)
 
         return path_optimized
 
@@ -536,15 +532,16 @@ class PathPlanner:
         # return path_message
         rospy.loginfo("Returning a Path message")
 
-        path_message = Path()
         poseList = []
+        path_message = Path()
         path_message.header.frame_id = 'map'
-        # print(path)
+
         for grid in path:
             point = PathPlanner.Grid_to_PoseStamped(mapdata, grid)
             poseList.append(point)
+
         path_message.poses = poseList
-        #print(path_message)
+
         return path_message
 
 
@@ -563,9 +560,11 @@ class PathPlanner:
         ## Calculate the C-space and publish it
         cspacedata = self.calc_cspace(mapdata, 1)
         ## Execute A*
-        start = PathPlanner.world_to_grid(mapdata, msg.start.pose.position)
-        goal  = PathPlanner.world_to_grid(mapdata, msg.goal.pose.position)
-        path  = self.a_star(cspacedata, start, goal)
+        # start = PathPlanner.world_to_grid(mapdata, msg.start.pose.position)
+        # goal  = PathPlanner.world_to_grid(mapdata, msg.goal.pose.position)
+        start = msg.start
+        goal = msg.goal
+        path = self.a_star(cspacedata, start, goal)
         ## Optimize waypoints
         waypoints = PathPlanner.optimize_path(path)
         ## Return a Path message
