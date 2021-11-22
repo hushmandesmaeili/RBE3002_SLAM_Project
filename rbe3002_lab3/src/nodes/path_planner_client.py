@@ -85,5 +85,5 @@ class PathPlannerClient:
 
 
 if __name__ == '__main__':
-    Lab2().run()
+    PathPlannerClient.run()
     
