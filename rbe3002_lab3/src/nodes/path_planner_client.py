@@ -49,7 +49,11 @@ class PathPlannerClient:
         start.header.frame_id = "odom"
         start.pose.position.x = self.px
         start.pose.position.y = self.py
-        # start.pose.orientation = quaternion_from_euler(0, 0, self.pth)
+        orientation = quaternion_from_euler(0, 0, self.pth)
+        start.pose.orientation.x = orientation[0]
+        start.pose.orientation.y = orientation[1]
+        start.pose.orientation.z = orientation[2]
+        start.pose.orientation.w = orientation[3]
         
         goal = msg
 
