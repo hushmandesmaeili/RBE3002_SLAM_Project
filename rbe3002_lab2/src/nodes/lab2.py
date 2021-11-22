@@ -18,6 +18,8 @@ class Lab2:
         self.py = 0.0
         self.pth = 0.0
 
+        self.path = []
+
         ### REQUIRED CREDIT
         ### Initialize node, name it 'lab2'
         rospy.init_node('lab2')
@@ -29,11 +31,20 @@ class Lab2:
         ### Tell ROS that this node subscribes to PoseStamped messages on the '/move_base_simple/goal' topic
         ### When a message is received, call self.go_to
         # rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.go_to)
-        rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.arc_to)
+        rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.follow_path)
+
+        rospy.Subscriber('/robot_path', Path, self.update_path)
         #pass # delete this when you implement your code
 
         # Give ROS time to initial nodes
         rospy.sleep(2)
+
+    def update_path(self, msg):
+        self.path = msg.poses
+
+    def follow_path(self):
+        for pose in self.path:
+            self.go_to(pose)
 
     def send_speed(self, linear_speed, angular_speed):
         """
