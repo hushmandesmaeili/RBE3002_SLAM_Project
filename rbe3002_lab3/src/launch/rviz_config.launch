@@ -1,0 +1,8 @@
+<launch>
+
+	<include file="$(find rbe3002_lab3)/launch/rbe3002_lab3_rviz.launch>
+	
+	<node pkg="rbe3002_lab2" type="path_planner.py" name="PathPlanner"/>
+	<node pkg="rbe3002_lab2" type="priority_queue.py" name="PriorityQueue"/>
+
+</launch>
