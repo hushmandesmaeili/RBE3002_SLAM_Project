@@ -6,4 +6,8 @@
 
     	<node pkg="rbe3002_lab3" type="path_planner.py" name="lab3"/>
 
+	<node pkg="rbe3002_lab3" type="path_planner_client.py" name="path_planner_client"/>
+
+	<node pkg="rbe3002_lab2" type="lab2.py" name="lab2"/>
+
 </launch>
