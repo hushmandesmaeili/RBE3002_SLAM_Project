@@ -24,8 +24,6 @@ class PathPlannerClient:
         self.pth = 0.0
 
         ### REQUIRED CREDIT
-        ### Initialize node, name it 'lab2'
-        rospy.init_node('lab2')
         ### Tell ROS that this node publishes Twist messages on the '/cmd_vel' topic
         self.speed_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         ### Tell ROS that this node subscribes to Odometry messages on the '/odom' topic
@@ -85,5 +83,5 @@ class PathPlannerClient:
 
 
 if __name__ == '__main__':
-    PathPlannerClient.run()
+    PathPlannerClient().run()
     
