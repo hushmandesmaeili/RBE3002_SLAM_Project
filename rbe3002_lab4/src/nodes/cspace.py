@@ -35,7 +35,7 @@ class ConfigSpace:
         # Initialize node
         rospy.init_node("cspace")
 
-        rospy.sleep(1.0)
+        rospy.sleep(3.0)
         rospy.loginfo("cspace node ready")
 
     # def gmapCallback(self, msg):
@@ -64,7 +64,7 @@ class ConfigSpace:
         return resp1.map
 
 
-    def calc_cspace(self, padding=5):
+    def calc_cspace(self, padding):
         """
         Calculates the C-Space, i.e., makes the obstacles in the map thicker.
         Publishes the list of cells that were added to the original map.
@@ -73,10 +73,12 @@ class ConfigSpace:
         :return        [OccupancyGrid] The C-Space
         """
         
+        ## Threshold map
+        thresh_map = mapf.thresholdMap(self._gmap)
+
         ## Inflate the obstacles where necessary
-        
-        padded_map = self._gmap
-        padded_map.data = list(self._gmap.data)
+        padded_map = thresh_map
+        padded_map.data = list(thresh_map.data)
         CSpace = []
 
         for h in range(0, padding):

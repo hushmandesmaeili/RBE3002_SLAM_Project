@@ -111,10 +111,10 @@ def is_cell_walkable(mapdata, x, y):
     :return        [boolean]       True if the cell is walkable, False otherwise
     """
 
-    index = PathPlanner.grid_to_index(mapdata,x,y)
+    index = grid_to_index(mapdata,x,y)
     
     if (x >= 0 and x < mapdata.info.width and y >= 0 and y < mapdata.info.height):
-        if(mapdata.data[index] == 0):
+        if (mapdata.data[index] == 0):
             return True
         else: 
             return False
@@ -132,15 +132,15 @@ def neighbors_of_4(mapdata, x, y):
     """
     walkable_neighbours = []
     
-    if (PathPlanner.is_cell_walkable(mapdata,x,y-1)):
-        walkable_neighbours.append((x,y-1))
-    if (PathPlanner.is_cell_walkable(mapdata,x,y+1)):
-        walkable_neighbours.append((x,y+1))
+    if (is_cell_walkable(mapdata, x, y-1)):
+        walkable_neighbours.append((x, y-1))
+    if (is_cell_walkable(mapdata, x, y+1)):
+        walkable_neighbours.append((x, y+1))
 
-    if (PathPlanner.is_cell_walkable(mapdata,x-1,y)):
-        walkable_neighbours.append((x-1,y))
-    if (PathPlanner.is_cell_walkable(mapdata,x+1,y)):
-        walkable_neighbours.append((x+1,y))
+    if (is_cell_walkable(mapdata, x-1, y)):
+        walkable_neighbours.append((x-1, y))
+    if (is_cell_walkable(mapdata,x+1, y)):
+        walkable_neighbours.append((x+1, y))
 
     return walkable_neighbours
 
@@ -159,11 +159,43 @@ def neighbors_of_8(mapdata, x, y):
     for i in range(x - 1, x + 2):
         for j in range(y - 1, y + 2):
             if (not(i == x and j == y)):
-                if (PathPlanner.is_cell_walkable(mapdata, i, j)):
+                if (is_cell_walkable(mapdata, i, j)):
                     walkable_neighbours.append((i, j))
 
     return walkable_neighbours
 
+def isFrontierCell(mapdata, x, y):
+
+    # cell = index_to_grid(mapdata, index)
+
+    # x = cell[0]
+    # y = cell[1]
+
+    isTrue = True
+
+    for i in range(x - 1, x + 2):
+        for j in range(y - 1, y + 2):
+            if (not(i == x and j == y) and (i >= 0 and i < mapdata.info.width and j >= 0 and j < mapdata.info.height):):
+                index = grid_to_index(mapdata, x, y)
+                if (mapdata.data[index] != -1):
+                    isTrue == False
+                    break
+    
+    return isTrue
+
+
+def thresholdMap(mapdata):
+
+    threshold_map = mapdata
+    threshold_map.data = list(mapdata.data)
+
+    for i in range(0, len(mapdata.data):
+        if (mapdata.data[i] >= 50):
+            threshold_map.data[i] = 100
+        elif (mapdata.data[i] < 50 and mapdata.data[i] >= 0):
+            threshold_map.data[i] = 0
+    
+    return threshold_map
 
 def gridList_to_pointList(mapdata, gridList):
     pointList = []
