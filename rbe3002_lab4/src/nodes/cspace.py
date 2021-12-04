@@ -20,6 +20,7 @@ class ConfigSpace:
         """
 
         self._gmap = OccupancyGrid()
+        self.padded_map = OccupancyGrid()
         # self._gmapMetaData = MapMetaData()
         
         # Create publisher
@@ -31,6 +32,10 @@ class ConfigSpace:
         # goalSub = rospy.Subscriber('move_base_simple/goal', PoseStamped, goalCallback)
         # gmapSub = rospy.Subscriber('map', OccupancyGrid, gmapCallback)
         # infoSub = rospy.Subscriber('map_metadata', MapMetaData, mapInfoCallback)
+
+        # Create services
+        self.cspace_service = rospy.Service('get_padded_map', OccupancyGrid, self.calc_cspace)
+        self.save_map_service = rospy.Service('save_map', OccupancyGrid, self.save_map_callBack)
         
         # Initialize node
         rospy.init_node("cspace")
@@ -64,7 +69,7 @@ class ConfigSpace:
         return resp1.map
 
 
-    def calc_cspace(self, padding):
+    def calc_cspace(self, msg):
         """
         Calculates the C-Space, i.e., makes the obstacles in the map thicker.
         Publishes the list of cells that were added to the original map.
@@ -72,6 +77,9 @@ class ConfigSpace:
         :param padding [int]           The number of cells around the obstacles.
         :return        [OccupancyGrid] The C-Space
         """
+
+        ## Constant padding
+        padding = 2
         
         ## Threshold map
         thresh_map = mapf.thresholdMap(self._gmap)
@@ -101,18 +109,22 @@ class ConfigSpace:
                     paddindex = mapf.grid_to_index(padded_map, temp_x, temp_y)
                     padded_map.data[paddindex] = 100
 
-        cspacePub.publish(padded_map)
+        # cspacePub.publish(padded_map)
+        self.padded_map = padded_map
+        self.padded_map.data = list(padded_map.data)
 
         return padded_map
 
-    
+    def save_map_callBack(self, msg):
+        
+
     
     def run(self):
         """
         Runs the node until Ctrl-C is pressed.
         """
-        padding = 2
-        self.calc_cspace(padding)
+        # padding = 2
+        # self.calc_cspace(padding)
 
         # When do we save map?
 
