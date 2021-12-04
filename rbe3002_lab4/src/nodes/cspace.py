@@ -23,7 +23,7 @@ class ConfigSpace:
         # self._gmapMetaData = MapMetaData()
         
         # Create publisher
-        cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
+        # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
         
         # Create subscribers
         # odomSub = rospy.Subscriber('odom', Odometry, odomCallback)

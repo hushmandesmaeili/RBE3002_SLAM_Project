@@ -164,6 +164,24 @@ def neighbors_of_8(mapdata, x, y):
 
     return walkable_neighbours
 
+def neighbors_of_8_unknown(mapdata, x, y):
+    """
+    Returns the walkable 8-neighbors cells of (x,y) in the occupancy grid.
+    :param mapdata [OccupancyGrid] The map information.
+    :param x       [int]           The X coordinate in the grid.
+    :param y       [int]           The Y coordinate in the grid.
+    :return        [[(int,int)]]   A list of walkable 8-neighbors.
+    """
+    unknown_neighbours = []
+    
+    for i in range(x - 1, x + 2):
+        for j in range(y - 1, y + 2):
+            if (not(i == x and j == y)):
+                if (mapdata.data[index] == -1):
+                    unknown_neighbours.append((i, j))
+
+    return unknown_neighbours
+
 def isFrontierCell(mapdata, x, y):
 
     # cell = index_to_grid(mapdata, index)
@@ -171,11 +189,13 @@ def isFrontierCell(mapdata, x, y):
     # x = cell[0]
     # y = cell[1]
 
+    ## FIX RETURN LOGIX !!!!
+
     isTrue = True
 
     for i in range(x - 1, x + 2):
         for j in range(y - 1, y + 2):
-            if (not(i == x and j == y) and (i >= 0 and i < mapdata.info.width and j >= 0 and j < mapdata.info.height):):
+            if (not(i == x and j == y) and (i >= 0 and i < mapdata.info.width and j >= 0 and j < mapdata.info.height)):
                 index = grid_to_index(mapdata, x, y)
                 if (mapdata.data[index] != -1):
                     isTrue == False

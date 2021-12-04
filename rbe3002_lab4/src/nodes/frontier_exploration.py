@@ -41,6 +41,19 @@ class FrontierExploration:
 
 
     def calcFrontier(self, mapdata):
+        
+    def calcCentroid(self,mapdata, x, y):
+        
+       self.frontier_cells = []
+
+       length = 
+       
+       centroid_x = sum(x)/length
+       centroid_y = sum(y)/length
+
+
+
+
 
     
     def edgeDetection(self, mapdata):
@@ -56,12 +69,36 @@ class FrontierExploration:
             x = grid[0]
             y = grid[1]
 
-            if (isFrontierCell(mapdata, x, y)):
+            if (mapf.isFrontierCell(mapdata, x, y)):
                 _frontier_cells.append(grid)
     
 
-    def segmentFrontiers(self, edgeCells):
+    def segmentFrontiers(self, mapdata):
         
+        self._frontiers_bin = []
+
+        while not self._frontier_cells:
+
+            for point in self._frontier_cells:
+
+                tempBin = []
+                
+                self.frontier_cells.remove(point)
+                tempBin.append(point)
+                
+                neighborList = point.mapf.neighbours_of_8_unknown(mapdata, point[0], point[1])
+                
+                for neighbor in neighborList:
+                    
+                    tempBin.append(neighbor)
+
+                differenceList = set(tempBin) - set(self._frontier_cells)
+
+                while (differenceList):
+                    
+                    
+
+
    
     
     
