@@ -209,7 +209,7 @@ def thresholdMap(mapdata):
     threshold_map = mapdata
     threshold_map.data = list(mapdata.data)
 
-    for i in range(0, len(mapdata.data):
+    for i in range(len(mapdata.data)):
         if (mapdata.data[i] >= 50):
             threshold_map.data[i] = 100
         elif (mapdata.data[i] < 50 and mapdata.data[i] >= 0):

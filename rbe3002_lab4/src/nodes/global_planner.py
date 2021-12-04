@@ -7,7 +7,7 @@ from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
 from priority_queue import PriorityQueue
-import map_functions as mapf
+from scripts.map_functions import *
 
 
 
@@ -285,8 +285,8 @@ class PathPlanner:
         """
         ### REQUIRED CREDIT
         #rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start.pose.position[0], start.pose.position[1], goal.pose.position[0], goal.pose.position[1]))
-        start = mapf.PoseStamped_to_GridCoor(mapdata, start)
-        goal = mapf.PoseStamped_to_GridCoor(mapdata, goal)
+        start = PoseStamped_to_GridCoor(mapdata, start)
+        goal = PoseStamped_to_GridCoor(mapdata, goal)
         
         frontier = PriorityQueue()
         frontier.put(start, 0)         ## (OBJECT, PRIORITY)
@@ -309,15 +309,15 @@ class PathPlanner:
                 break
 
             for next in self.neighbors_of_8(mapdata, current[0], current[1]):
-                current_pose_stamped = mapf.Grid_to_PoseStamped(mapdata, current)
-                next_pose_stamped = mapf.Grid_to_PoseStamped(mapdata, next)
+                current_pose_stamped = Grid_to_PoseStamped(mapdata, current)
+                next_pose_stamped = Grid_to_PoseStamped(mapdata, next)
 
                 new_cost = cost_so_far[current] + self.find_cost(current_pose_stamped, next_pose_stamped)
 
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
                     cost_so_far[next] = new_cost
 
-                    goal_pose_stamped = mapf.Grid_to_PoseStamped(mapdata, goal)
+                    goal_pose_stamped = Grid_to_PoseStamped(mapdata, goal)
                     priority = new_cost + self.heuristic(goal_pose_stamped, next_pose_stamped)
 
                     frontier.put(next, priority)
@@ -327,7 +327,7 @@ class PathPlanner:
             self.publishFrontier(mapdata, frontier)
             self.publishVisited(mapdata, visited)
 
-        path = mapf.CameFrom_to_Path(mapdata, start, goal, came_from)
+        path = CameFrom_to_Path(mapdata, start, goal, came_from)
         path.reverse()
 
         # self.publishPath(mapdata, path)
@@ -365,7 +365,7 @@ class PathPlanner:
         visited_gridcell.cell_height = mapdata.info.resolution
 
         gridList = visited_list
-        pointList = mapf.gridList_to_pointList(mapdata, gridList)
+        pointList = gridList_to_pointList(mapdata, gridList)
 
         visited_gridcell.cells = pointList
 
@@ -379,7 +379,7 @@ class PathPlanner:
         path_gridcell.cell_height = mapdata.info.resolution
 
         gridList = path_list
-        pointList = mapf.gridList_to_pointList(mapdata, gridList)
+        pointList = gridList_to_pointList(mapdata, gridList)
 
         path_gridcell.cells = pointList
 
@@ -405,7 +405,7 @@ class PathPlanner:
     #     pointList = []
 
     #     for elem in gridList:
-    #         pointList.append(mapf.grid_to_world(mapdata, elem[0], elem[1]))
+    #         pointList.append(grid_to_world(mapdata, elem[0], elem[1]))
 
     #     return pointList
 
@@ -417,7 +417,7 @@ class PathPlanner:
     #     gridcell.cell_width = mapdata.info.resolution
     #     gridcell.cell_height = mapdata.info.resolutionf
 
-    #     worldPoint = mapf.PoseStamped_to_WorldPoint(pStamped)
+    #     worldPoint = PoseStamped_to_WorldPoint(pStamped)
     #     gridcell.cells = worldPoint
 
     #     return gridcell
@@ -428,7 +428,7 @@ class PathPlanner:
     #     grid_x = grid[0]
     #     grid_y = grid[1]
 
-    #     worldPoint = mapf.grid_to_world(mapdata, grid_x, grid_y)
+    #     worldPoint = grid_to_world(mapdata, grid_x, grid_y)
         
     #     pose.pose.position.x = worldPoint.x
     #     pose.pose.position.y = worldPoint.y
@@ -438,9 +438,9 @@ class PathPlanner:
 
     # @staticmethod
     # def PoseStamped_to_GridCoor(mapdata, pStamped):
-    #     worldPoint = mapf.PoseStamped_to_WorldPoint(pStamped)
+    #     worldPoint = PoseStamped_to_WorldPoint(pStamped)
 
-    #     grid_cell = mapf.world_to_grid(mapdata, worldPoint)
+    #     grid_cell = world_to_grid(mapdata, worldPoint)
 
     #     return grid_cell
 
@@ -528,7 +528,7 @@ class PathPlanner:
         path_message.header.frame_id = 'map'
 
         for grid in path:
-            point = mapf.Grid_to_PoseStamped(mapdata, grid)
+            point = Grid_to_PoseStamped(mapdata, grid)
             poseList.append(point)
 
         path_message.poses = poseList

@@ -7,7 +7,7 @@ from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
 from priority_queue import PriorityQueue
-import map_functions as mapf
+from scripts.map_functions import *
 
 
 
@@ -34,7 +34,7 @@ class FrontierExploration:
         # Create subscribers
         # gmapSub = rospy.Subscriber('map', OccupancyGrid, gmapCallback)
         # infoSub = rospy.Subscriber('map_metadata', MapMetaData, mapInfoCallback)
-        cspaceSub = rospy.Subscriber('map', OccupancyGrid, cspaceCallback)
+        cspaceSub = rospy.Subscriber('map', OccupancyGrid, self.getCSpace)
 
         odomSub = rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
@@ -65,7 +65,7 @@ class FrontierExploration:
             y_start = self.py
             x_goal = centroid[0]
             y_goal = centroid[1]
-            distance = mapf.euclidean_distance(x_start, y_start, x_goal, y_goal)
+            distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
             
             length = self.calcLength()
 
@@ -89,14 +89,6 @@ class FrontierExploration:
 
         pass
 
-    def getDistance(self, mapdata, goal):
-        """
-        Returns distance to a given point
-        """
-        pass
-
-
-    def calcFrontier(self, mapdata):
         
     def calcCentroid(self,mapdata, cells):
         
@@ -129,11 +121,11 @@ class FrontierExploration:
         self._frontier_cells = []
 
         for i in range(0, len(mapdata.data)):
-            grid = mapf.index_to_grid(mapdata, i)
+            grid = index_to_grid(mapdata, i)
             x = grid[0]
             y = grid[1]
 
-            if (mapf.isFrontierCell(mapdata, x, y)):
+            if (isFrontierCell(mapdata, x, y)):
                 _frontier_cells.append(grid)
     
 
@@ -150,7 +142,7 @@ class FrontierExploration:
                 self._frontier_cells.remove(point)
                 tempBin.append(point)
                 
-                neighborList = mapf.neighbors_of_8_unknown(mapdata, point[0], point[1])
+                neighborList = neighbors_of_8_unknown(mapdata, point[0], point[1])
                 
 
                 for neighbor in neighborList:
@@ -187,7 +179,6 @@ class FrontierExploration:
         """
         
         rospy.spin()
-
 
         
 if __name__ == '__main__':

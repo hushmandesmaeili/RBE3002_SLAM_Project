@@ -7,8 +7,7 @@ from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
 from priority_queue import PriorityQueue
-import map_functions as mapf
-
+from scripts.map_functions import *
 
 
 class ConfigSpace:
@@ -25,6 +24,10 @@ class ConfigSpace:
         
         # Create publisher
         # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
+
+        ## Create a publisher for the C-space (the enlarged occupancy grid)
+        ## The topic is "/path_planner/cspace", the message type is GridCells
+        self.Cspace_pub = rospy.Publisher('/cspace_map', GridCells, queue_size=10)
         
         # Create subscribers
         # odomSub = rospy.Subscriber('odom', Odometry, odomCallback)
@@ -43,15 +46,10 @@ class ConfigSpace:
         rospy.sleep(3.0)
         rospy.loginfo("cspace node ready")
 
-    # def gmapCallback(self, msg):
-    #     _gmap = msg
 
-    # def mapInfoCallback(self, msg):
-    #     _gmapMetaData = msg
-
-    @staticmethod
-    def request_map():
-         """
+    # @staticmethod
+    def request_map(self):
+        """
         Requests the map from the map server.
         :return [OccupancyGrid] The grid if the service call was successful,
                                 None in case of error.
@@ -65,11 +63,13 @@ class ConfigSpace:
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
 
+        # self._gmap.data = list(resp1.map.data)
         self._gmap = resp1.map
+        
         return resp1.map
 
 
-    def calc_cspace(self, msg):
+    def calc_cspace(self):
         """
         Calculates the C-Space, i.e., makes the obstacles in the map thicker.
         Publishes the list of cells that were added to the original map.
@@ -80,13 +80,16 @@ class ConfigSpace:
 
         ## Constant padding
         padding = 2
-        
+
+        self.request_map()
         ## Threshold map
-        thresh_map = mapf.thresholdMap(self._gmap)
+        # thresh_map = thresholdMap(self._gmap)
 
         ## Inflate the obstacles where necessary
-        padded_map = thresh_map
-        padded_map.data = list(thresh_map.data)
+        # padded_map = thresh_map
+        # padded_map.data = list(thresh_map.data)
+        padded_map = self._gmap
+        padded_map.data = list(self._gmap.data)
         CSpace = []
 
         for h in range(0, padding):
@@ -96,7 +99,7 @@ class ConfigSpace:
                 for i in range(0, len(padded_map.data)):
                     
                     if (padded_map.data[i] == 100):
-                        grid = mapf.index_to_grid(padded_map, i)
+                        grid = index_to_grid(padded_map, i)
                         neighbors = neighbors_of_8(padded_map, grid[0], grid[1])
                         
                         for k in neighbors:
@@ -106,17 +109,30 @@ class ConfigSpace:
                 for j in range(0,len(CSpace)):
                     temp_x = CSpace[j][0]
                     temp_y = CSpace[j][1]
-                    paddindex = mapf.grid_to_index(padded_map, temp_x, temp_y)
+                    paddindex = grid_to_index(padded_map, temp_x, temp_y)
                     padded_map.data[paddindex] = 100
 
         # cspacePub.publish(padded_map)
         self.padded_map = padded_map
         self.padded_map.data = list(padded_map.data)
 
+
+        # # ## Create a GridCells message and publish it
+        for i in range(0,len(CSpace)):
+            CSpace[i] = grid_to_world(padded_map, CSpace[i][0], CSpace[i][1])
+
+        gridCell = GridCells()
+        gridCell.header.frame_id = 'map'
+        gridCell.cell_width = padded_map.info.resolution
+        gridCell.cell_height = padded_map.info.resolution
+        gridCell.cells = CSpace
+        self.Cspace_pub.publish(gridCell)
+
         return padded_map
 
     def save_map_callBack(self, msg):
-
+        
+        pass
 
     
     def run(self):
@@ -124,7 +140,9 @@ class ConfigSpace:
         Runs the node until Ctrl-C is pressed.
         """
         # padding = 2
-        # self.calc_cspace(padding)
+        
+        # TEST CASE FOR CSPACE ALONE, without frontier_exploration trigger
+        self.calc_cspace()
 
         # When do we save map?
 
