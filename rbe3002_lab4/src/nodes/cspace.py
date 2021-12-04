@@ -34,8 +34,8 @@ class ConfigSpace:
         # infoSub = rospy.Subscriber('map_metadata', MapMetaData, mapInfoCallback)
 
         # Create services
-        self.cspace_service = rospy.Service('get_padded_map', OccupancyGrid, self.calc_cspace)
-        self.save_map_service = rospy.Service('save_map', OccupancyGrid, self.save_map_callBack)
+        self.cspace_service = rospy.Service('get_padded_map', GetMap, self.calc_cspace)
+        self.save_map_service = rospy.Service('save_map', GetMap, self.save_map_callBack)
         
         # Initialize node
         rospy.init_node("cspace")
@@ -116,7 +116,7 @@ class ConfigSpace:
         return padded_map
 
     def save_map_callBack(self, msg):
-        
+
 
     
     def run(self):
