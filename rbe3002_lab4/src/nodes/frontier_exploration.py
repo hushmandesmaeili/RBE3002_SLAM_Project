@@ -73,28 +73,33 @@ class FrontierExploration:
                 _frontier_cells.append(grid)
     
 
-    def segmentFrontiers(self, mapdata):
+    def segmentFrontiers(self, mapdata, list):
         
         self._frontiers_bin = []
+        neighborList = []
+        tempBin = []
 
-        while not self._frontier_cells:
+        while self._frontier_cells:
 
             for point in self._frontier_cells:
-
-                tempBin = []
                 
-                self.frontier_cells.remove(point)
+                self._frontier_cells.remove(point)
                 tempBin.append(point)
                 
-                neighborList = point.mapf.neighbours_of_8_unknown(mapdata, point[0], point[1])
+                neighborList = mapf.neighbors_of_8_unknown(mapdata, point[0], point[1])
+                
+
+                for neighbor in neighborList:
+                    tempBin.append(neighbor)
                 
                 for neighbor in neighborList:
-                    
-                    tempBin.append(neighbor)
+                    self.segmentFrontiers(mapdata, neighborList)
 
-                differenceList = set(tempBin) - set(self._frontier_cells)
-
-                while (differenceList):
+            if not neighborList:
+                differenceBin = list(set(tempBin) - set(self._frontier_cells))
+                self._frontiers_bin.append(differenceBin)
+                tempBin = []
+                differenceBin = []
                     
                     
 
