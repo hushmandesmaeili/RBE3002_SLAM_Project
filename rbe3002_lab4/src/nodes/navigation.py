@@ -6,6 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
+from rbe3002_lab4.srv import PoseStampedServices
 from priority_queue import PriorityQueue
 
 
@@ -30,7 +31,7 @@ class Navigation:
         rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
         # rospy.Subscriber('/robot_path', Path, self.follow_path)
-        self.navigate_service = rospy.Service('navigate_to', PoseStamped, self.go_to)
+        self.navigate_service = rospy.Service('navigate_to', PoseStampedServices, self.go_to)
 
         # Give ROS time to initial nodes
         rospy.sleep(1.0)

@@ -6,6 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
+from rbe3002_lab4.srv import PoseStampedServices
 from priority_queue import PriorityQueue
 from scripts.map_functions import *
 
@@ -39,7 +40,7 @@ class FrontierExploration:
         odomSub = rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
         # Create services
-        self.getFrontier_service = rospy.Service('get_frontier', PoseStamped, self.getFrontier)
+        self.getFrontier_service = rospy.Service('get_frontier', PoseStampedServices, self.getFrontier)
         
         # Initialize node
         rospy.init_node("frontier_exploration")
@@ -87,7 +88,7 @@ class FrontierExploration:
 
         return resp1.map
 
-        pass
+        # pass
 
         
     def calcCentroid(self,mapdata, cells):

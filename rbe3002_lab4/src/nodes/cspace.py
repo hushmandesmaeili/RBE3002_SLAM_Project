@@ -142,7 +142,7 @@ class ConfigSpace:
         # padding = 2
         
         # TEST CASE FOR CSPACE ALONE, without frontier_exploration trigger
-        self.calc_cspace()
+        # self.calc_cspace()
 
         # When do we save map?
 
