@@ -42,18 +42,26 @@ class FrontierExploration:
 
     def calcFrontier(self, mapdata):
         
-    def calcCentroid(self,mapdata, x, y):
+    def calcCentroid(self,mapdata, cells):
         
-       self.frontier_cells = []
+       frontier_cells = []
 
-       length = 
+       x_coordinate = [c[0] for c in cells]
+       y_coordinate = [c[1] for c in cells]
+
+       n = len(cells)
        
-       centroid_x = sum(x)/length
-       centroid_y = sum(y)/length
+       centroid_x = sum(x_coordinate)/n
+       centroid_y = sum(y_coordinate)/n
 
+       append.frontier_cells([centroid_x,centroid_y])
 
+       return frontier_cells
 
+    
+    def calcLength(self, mapdata, bin):
 
+        return len(bin)
 
     
     def edgeDetection(self, mapdata):
