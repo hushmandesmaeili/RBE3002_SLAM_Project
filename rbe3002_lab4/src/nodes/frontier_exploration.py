@@ -19,8 +19,15 @@ class FrontierExploration:
         Class constructor
         """
 
+        self.px = 0
+        self.py = 0
+
         self._frontier_cells = []
         self._frontiers_bin = []
+
+        # # Stores distance and length for each frontier bin
+        # self._frontiers_dict = {}
+
         # Create publisher
         # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
         
@@ -28,6 +35,11 @@ class FrontierExploration:
         # gmapSub = rospy.Subscriber('map', OccupancyGrid, gmapCallback)
         # infoSub = rospy.Subscriber('map_metadata', MapMetaData, mapInfoCallback)
         cspaceSub = rospy.Subscriber('map', OccupancyGrid, cspaceCallback)
+
+        odomSub = rospy.Subscriber('/odom', Odometry, self.update_odometry)
+
+        # Create services
+        self.getFrontier_service = rospy.Service('get_frontier', PoseStamped, self.getFrontier)
         
         # Initialize node
         rospy.init_node("frontier_exploration")
@@ -36,7 +48,51 @@ class FrontierExploration:
         rospy.loginfo("frontier_exploration node ready")
 
 
-    def cspaceCallback(self, msg):
+    def getFrontier(self, msg):
+
+        map = self.getCSpace()
+
+        frontiersPriorityQueue = PriorityQueue()
+        
+        self.edgeDetection(map)
+        self.segmentFrontiers(map)
+
+        for i in range(len(self._frontiers_bin)):
+
+            centroid = self.calcCentroid(self._frontiers_bin[i])
+
+            x_start = self.px
+            y_start = self.py
+            x_goal = centroid[0]
+            y_goal = centroid[1]
+            distance = mapf.euclidean_distance(x_start, y_start, x_goal, y_goal)
+            
+            length = self.calcLength()
+
+            priority = distance/length
+
+            frontiersPriorityQueue.put(centroid, priority)
+        
+        return frontiersPriorityQueue.get()
+
+
+    def getCSpace(self):
+        rospy.loginfo("Requesting the cspace map")
+        rospy.wait_for_service('/get_padded_map')
+        mapdata = rospy.ServiceProxy('/get_padded_map', GetMap)
+        try:
+            resp1 = mapdata()
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+
+        return resp1.map
+
+        pass
+
+    def getDistance(self, mapdata, goal):
+        """
+        Returns distance to a given point
+        """
         pass
 
 
@@ -109,10 +165,20 @@ class FrontierExploration:
                 tempBin = []
                 differenceBin = []
                     
-                    
 
-
-   
+    def update_odometry(self, msg):
+        """
+        Updates the current pose of the robot.
+        This method is a callback bound to a Subscriber.
+        :param msg [Odometry] The current odometry information.
+        """
+        ### REQUIRED CREDIT
+        self.px = msg.pose.pose.position.x
+        self.py = msg.pose.pose.position.y
+        quat_orig = msg.pose.pose.orientation
+        quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
+        (roll, pitch, yaw) = euler_from_quaternion(quat_list)
+        self.pth = yaw
     
     
     def run(self):
