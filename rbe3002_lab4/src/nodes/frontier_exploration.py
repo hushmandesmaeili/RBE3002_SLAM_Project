@@ -4,7 +4,7 @@ import math
 import time
 import rospy
 from nav_msgs.srv import GetPlan, GetMap
-from nav_msgs.msg import GridCells, OccupancyGrid, Path
+from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
 from rbe3002_lab4.srv import PoseStampedServices
 from priority_queue import PriorityQueue
@@ -183,4 +183,4 @@ class FrontierExploration:
 
         
 if __name__ == '__main__':
-    Navigation().run()
+    FrontierExploration().run()
