@@ -12,6 +12,7 @@ from scripts.map_functions import *
 
 
 
+
 class FrontierExploration:
 
     
@@ -31,11 +32,13 @@ class FrontierExploration:
 
         # Create publisher
         # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
+
+        self.Edge_pub = rospy.Publisher('/edge_cells', GridCells, queue_size=10)
         
         # Create subscribers
         # gmapSub = rospy.Subscriber('map', OccupancyGrid, gmapCallback)
         # infoSub = rospy.Subscriber('map_metadata', MapMetaData, mapInfoCallback)
-        cspaceSub = rospy.Subscriber('map', OccupancyGrid, self.getCSpace)
+        # cspaceSub = rospy.Subscriber('map', OccupancyGrid, self.getCSpace)
 
         odomSub = rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
@@ -49,38 +52,51 @@ class FrontierExploration:
         rospy.loginfo("frontier_exploration node ready")
 
 
-    def getFrontier(self, msg):
+    def getFrontier(self):
 
+        print("Get CSpace")
         map = self.getCSpace()
 
         frontiersPriorityQueue = PriorityQueue()
         
+        print("Edge detection")
+
+        # mapTest = OccupancyGrid()
+
+        # mapTest.info.height = 4
+        # mapTest.info.width = 4
+        # mapTest.data = [100, 100, 100, 100, 100, -1,-1,100,100,-1,-1,100,100,0,0,100]
+
         self.edgeDetection(map)
+        # self.edgeDetection(mapTest)
+        # print(self._frontier_cells)
+        # print("Segment")
         self.segmentFrontiers(map)
+        print(self._frontiers_bin)
 
-        for i in range(len(self._frontiers_bin)):
+        # for i in range(len(self._frontiers_bin)):
 
-            centroid = self.calcCentroid(self._frontiers_bin[i])
+        #     centroid = self.calcCentroid(self._frontiers_bin[i])
 
-            x_start = self.px
-            y_start = self.py
-            x_goal = centroid[0]
-            y_goal = centroid[1]
-            distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
+        #     x_start = self.px
+        #     y_start = self.py
+        #     x_goal = centroid[0]
+        #     y_goal = centroid[1]
+        #     distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
             
-            length = self.calcLength()
+        #     length = self.calcLength()
 
-            priority = distance/length
+        #     priority = distance/length
 
-            frontiersPriorityQueue.put(centroid, priority)
+        #     frontiersPriorityQueue.put(centroid, priority)
         
-        return frontiersPriorityQueue.get()
+        # return frontiersPriorityQueue.get()
 
 
     def getCSpace(self):
         rospy.loginfo("Requesting the cspace map")
-        rospy.wait_for_service('/get_padded_map')
-        mapdata = rospy.ServiceProxy('/get_padded_map', GetMap)
+        rospy.wait_for_service('get_padded_map')
+        mapdata = rospy.ServiceProxy('get_padded_map', GetMap)
         try:
             resp1 = mapdata()
         except rospy.ServiceException as exc:
@@ -127,36 +143,80 @@ class FrontierExploration:
             y = grid[1]
 
             if (isFrontierCell(mapdata, x, y)):
-                _frontier_cells.append(grid)
+                self._frontier_cells.append(grid)
+
+        pointList = gridList_to_pointList(mapdata, self._frontier_cells)
+        
+        gridCell = GridCells()
+        gridCell.header.frame_id = 'map'
+        gridCell.cell_width = mapdata.info.resolution
+        gridCell.cell_height = mapdata.info.resolution
+        gridCell.cells = pointList
+
+        self.Edge_pub.publish(gridCell)
     
 
-    def segmentFrontiers(self, mapdata, list):
+    def segmentFrontiers(self, mapdata):
+
+        frontier_cells = self._frontier_cells
+
+        tempBin = {}
+        tempBin[0] = []
+        counter = 0
+
+        for frontier_cell in frontier_cells:
+
+            if frontier_cell == frontier_cells[0]:
+                
+                tempBin[0].append(frontier_cell)
+
+            else:
+
+                neighbors = neighbors_of_8_unknown(mapdata, *frontier_cell)
+
+                for key in tempBin.keys():
+
+                    if not set(neighbors).isdisjoint(set(tempBin.get(key))):
+
+                        tempBin[key].append(frontier_cell)
+
+                    else:
+
+                        counter += 1
+                        tempBin[counter].append(frontier_cell)
+
+        for key in tempBin.keys():
+
+            self._frontiers_bin.append(tempBin[key])
         
-        self._frontiers_bin = []
-        neighborList = []
-        tempBin = []
 
-        while self._frontier_cells:
+        
+        # self._frontiers_bin = []
 
-            for point in self._frontier_cells:
+        # neighborList = []
+        # tempBin = []
+
+        # while self._frontier_cells:
+
+        #     for point in self._frontier_cells:
                 
-                self._frontier_cells.remove(point)
-                tempBin.append(point)
+        #         self._frontier_cells.remove(point)
+        #         tempBin.append(point)
                 
-                neighborList = neighbors_of_8_unknown(mapdata, point[0], point[1])
+        #         neighborList = neighbors_of_8_unknown(mapdata, point[0], point[1])
                 
 
-                for neighbor in neighborList:
-                    tempBin.append(neighbor)
+        #         for neighbor in neighborList:
+        #             tempBin.append(neighbor)
                 
-                for neighbor in neighborList:
-                    self.segmentFrontiers(mapdata, neighborList)
+        #         for neighbor in neighborList:
+        #             self.segmentFrontiers(mapdata, neighborList)
 
-            if not neighborList:
-                differenceBin = list(set(tempBin) - set(self._frontier_cells))
-                self._frontiers_bin.append(differenceBin)
-                tempBin = []
-                differenceBin = []
+        #     if not neighborList:
+        #         differenceBin = list(set(tempBin) - set(self._frontier_cells))
+        #         self._frontiers_bin.append(differenceBin)
+        #         tempBin = []
+        #         differenceBin = []
                     
 
     def update_odometry(self, msg):
@@ -168,17 +228,12 @@ class FrontierExploration:
         ### REQUIRED CREDIT
         self.px = msg.pose.pose.position.x
         self.py = msg.pose.pose.position.y
-        quat_orig = msg.pose.pose.orientation
-        quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
-        (roll, pitch, yaw) = euler_from_quaternion(quat_list)
-        self.pth = yaw
-    
     
     def run(self):
         """
         Runs the node until Ctrl-C is pressed.
         """
-        
+        self.getFrontier()
         rospy.spin()
 
         

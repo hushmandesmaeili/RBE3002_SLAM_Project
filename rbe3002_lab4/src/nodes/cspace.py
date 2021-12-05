@@ -69,7 +69,7 @@ class ConfigSpace:
         return resp1.map
 
 
-    def calc_cspace(self):
+    def calc_cspace(self, msg):
         """
         Calculates the C-Space, i.e., makes the obstacles in the map thicker.
         Publishes the list of cells that were added to the original map.

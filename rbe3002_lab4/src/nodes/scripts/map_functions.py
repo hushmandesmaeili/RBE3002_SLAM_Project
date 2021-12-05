@@ -8,6 +8,8 @@ from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
 from priority_queue import PriorityQueue
 
+
+
 def grid_to_index(mapdata, x, y):
         """
         Returns the index corresponding to the given (x,y) coordinates in the occupancy grid.
@@ -177,7 +179,7 @@ def neighbors_of_8_unknown(mapdata, x, y):
     for i in range(x - 1, x + 2):
         for j in range(y - 1, y + 2):
             if (not(i == x and j == y)):
-                if (mapdata.data[index] == -1):
+                if (mapdata.data[i] == -1):
                     unknown_neighbours.append((i, j))
 
     return unknown_neighbours
@@ -191,15 +193,18 @@ def isFrontierCell(mapdata, x, y):
 
     ## FIX RETURN LOGIX !!!!
 
-    isTrue = True
+    isTrue = False
+    indexCurrent = grid_to_index(mapdata, x, y)
 
-    for i in range(x - 1, x + 2):
-        for j in range(y - 1, y + 2):
-            if (not(i == x and j == y) and (i >= 0 and i < mapdata.info.width and j >= 0 and j < mapdata.info.height)):
-                index = grid_to_index(mapdata, x, y)
-                if (mapdata.data[index] != -1):
-                    isTrue == False
-                    break
+    if (mapdata.data[indexCurrent] == 0):
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if (not(i == x and j == y) and (i >= 0 and i < mapdata.info.width and j >= 0 and j < mapdata.info.height)):
+                    index = grid_to_index(mapdata, i, j)
+                    if (mapdata.data[index] == -1):
+                        isTrue == True
+                        return True
+                        break
     
     return isTrue
 
@@ -221,7 +226,7 @@ def gridList_to_pointList(mapdata, gridList):
     pointList = []
 
     for elem in gridList:
-        pointList.append(mapf.grid_to_world(mapdata, elem[0], elem[1]))
+        pointList.append(grid_to_world(mapdata, elem[0], elem[1]))
 
     return pointList
 
@@ -232,7 +237,7 @@ def PoseStamped_to_GridCells(mapdata, pStamped):
     gridcell.cell_width = mapdata.info.resolution
     gridcell.cell_height = mapdata.info.resolutionf
 
-    worldPoint = mapf.PoseStamped_to_WorldPoint(pStamped)
+    worldPoint = PoseStamped_to_WorldPoint(pStamped)
     gridcell.cells = worldPoint
 
     return gridcell
@@ -243,7 +248,7 @@ def Grid_to_PoseStamped(mapdata, grid):
     grid_x = grid[0]
     grid_y = grid[1]
 
-    worldPoint = mapf.grid_to_world(mapdata, grid_x, grid_y)
+    worldPoint = grid_to_world(mapdata, grid_x, grid_y)
     
     pose.pose.position.x = worldPoint.x
     pose.pose.position.y = worldPoint.y
@@ -252,9 +257,9 @@ def Grid_to_PoseStamped(mapdata, grid):
 
 
 def PoseStamped_to_GridCoor(mapdata, pStamped):
-    worldPoint = mapf.PoseStamped_to_WorldPoint(pStamped)
+    worldPoint = PoseStamped_to_WorldPoint(pStamped)
 
-    grid_cell = mapf.world_to_grid(mapdata, worldPoint)
+    grid_cell = world_to_grid(mapdata, worldPoint)
 
     return grid_cell
 
