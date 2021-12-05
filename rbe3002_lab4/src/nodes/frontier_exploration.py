@@ -9,7 +9,8 @@ from geometry_msgs.msg import Point, Pose, PoseStamped
 from rbe3002_lab4.srv import PoseStampedServices
 from priority_queue import PriorityQueue
 from scripts.map_functions import *
-
+# from collections import defaultdict
+from itertools import groupby, product
 
 
 
@@ -70,7 +71,7 @@ class FrontierExploration:
         self.edgeDetection(map)
         # self.edgeDetection(mapTest)
         # print(self._frontier_cells)
-        # print("Segment")
+        print("Segment")
         self.segmentFrontiers(map)
         print(self._frontiers_bin)
 
@@ -159,37 +160,54 @@ class FrontierExploration:
     def segmentFrontiers(self, mapdata):
 
         frontier_cells = self._frontier_cells
+        # frontier_cells.sort(key=lambda y: y[1])
 
-        tempBin = {}
-        tempBin[0] = []
-        counter = 0
+        # tempBin = defaultdict(lambda : [])
+        # tempBin[0] = []
+        # counter = 0
 
-        for frontier_cell in frontier_cells:
+        # for frontier_cell in frontier_cells:
+        #     print(frontier_cell)
 
-            if frontier_cell == frontier_cells[0]:
+        #     if frontier_cell == frontier_cells[0]:
                 
-                tempBin[0].append(frontier_cell)
+        #         tempBin[0].append(frontier_cell)
 
-            else:
+        #     else:
 
-                neighbors = neighbors_of_8_unknown(mapdata, *frontier_cell)
+        #         neighbors = neighbors_of_8_unknown(mapdata, *frontier_cell)
 
-                for key in tempBin.keys():
+        #         for key in tempBin.keys():
 
-                    if not set(neighbors).isdisjoint(set(tempBin.get(key))):
+        #             if not set(neighbors).isdisjoint(set(tempBin.get(key))):
 
-                        tempBin[key].append(frontier_cell)
+        #                 tempBin[key].append(frontier_cell)
 
-                    else:
+        #             else:
 
-                        counter += 1
-                        tempBin[counter].append(frontier_cell)
+        #                 counter += 1
+        #                 tempBin[counter].append(frontier_cell)
 
-        for key in tempBin.keys():
+        # for key in tempBin.keys():
 
-            self._frontiers_bin.append(tempBin[key])
+        #     self._frontiers_bin.append(tempBin[key])
         
 
+
+        # man_tups = [sorted(sub) for sub in product(frontier_cells, repeat = 2)
+        #                                     if euclidean_distance(*sub) <= 1.5]
+        
+
+        # res_dict = {ele: {ele} for ele in frontier_cells}
+
+        # for tup1, tup2 in man_tups:
+        #     res_dict[tup1] |= res_dict[tup2]
+        #     res_dict[tup2] = res_dict[tup1]
+        
+
+        # res = [[*next(val)] for key, val in groupby(sorted(res_dict.values(), key = id), id)]
+
+        # self._frontiers_bin = res
         
         # self._frontiers_bin = []
 
