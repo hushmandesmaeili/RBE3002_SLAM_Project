@@ -156,10 +156,28 @@ class FrontierExploration:
 
         self.Edge_pub.publish(gridCell)
     
-
+    
     def segmentFrontiers(self, mapdata):
+        
+        ## Code taken and adapted from GeeksForGeeks article 
+        # Python — Group Adjacent Coordinates
+        # https://www.geeksforgeeks.org/python-group-adjacent-coordinates/amp/
+        
+        # Code adapted to do diagonal neighbors as well as adjacent
+        # Code fixed as well to format the list of lists and store in global bin
 
         frontier_cells = self._frontier_cells
+        
+        tuple_pairs = [sorted(pair) for pair in product(frontier_cells, repeat=2) if euclidean_distance(*pair) <= 1.5]
+
+        result_dict = {t: {t} for t in frontier_cells}
+        for t1, t2 in tuple_pairs:
+            # "Unify" these tuple's groups
+            result_dict[t1] |= result_dict[t2]
+            result_dict[t2] = result_dict[t1]
+
+        result = [list((next(g))) for k, g in groupby(sorted(result_dict.values(), key=id), id)]
+        self._frontiers_bin = result
         # frontier_cells.sort(key=lambda y: y[1])
 
         # tempBin = defaultdict(lambda : [])
