@@ -47,6 +47,22 @@ def euclidean_distance(x1, y1, x2, y2):
         distance = (math.sqrt((x2 - x1)**2 + (y2 - y1)**2))
         return distance
 
+def euclidean_distance_tups(tup1, tup2):
+        """
+        Calculates the Euclidean distance between two points.
+        :param x1 [int or float] X coordinate of first point.
+        :param y1 [int or float] Y coordinate of first point.
+        :param x2 [int or float] X coordinate of second point.
+        :param y2 [int or float] Y coordinate of second point.
+        :return   [float]        The distance.
+        """
+        x1 = tup1[0]
+        y1 = tup1[1]
+        x2 = tup2[0]
+        y2 = tup2[1]
+        distance = euclidean_distance(x1, y1, x2, y2)
+        return distance
+
 def grid_to_world(mapdata, x, y):
         """
         Transforms a cell coordinate in the occupancy grid into a world coordinate.

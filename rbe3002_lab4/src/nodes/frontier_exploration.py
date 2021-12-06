@@ -35,6 +35,7 @@ class FrontierExploration:
         # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
 
         self.Edge_pub = rospy.Publisher('/edge_cells', GridCells, queue_size=10)
+        self.centroid_pub = rospy.Publisher('/centroid_cells', GridCells, queue_size=10)
         
         # Create subscribers
         # gmapSub = rospy.Subscriber('map', OccupancyGrid, gmapCallback)
@@ -75,23 +76,44 @@ class FrontierExploration:
         self.segmentFrontiers(map)
         print(self._frontiers_bin)
 
-        # for i in range(len(self._frontiers_bin)):
+        centroid_gridlist = []
 
-        #     centroid = self.calcCentroid(self._frontiers_bin[i])
+        for i in range(len(self._frontiers_bin)):
 
-        #     x_start = self.px
-        #     y_start = self.py
-        #     x_goal = centroid[0]
-        #     y_goal = centroid[1]
-        #     distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
+            centroid = self.calcCentroid(self._frontiers_bin[i])
+            centroid_gridlist.append(centroid)
+
+            x_start = self.px
+            y_start = self.py
+            x_goal = centroid[0]
+            y_goal = centroid[1]
+            distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
             
-        #     length = self.calcLength()
+            length = self.calcLength(self._frontiers_bin[i])
 
-        #     priority = distance/length
+            priority = distance/length
 
-        #     frontiersPriorityQueue.put(centroid, priority)
+            print(grid_to_world(map, *centroid), centroid, distance, length, priority)
+
+            frontiersPriorityQueue.put(centroid, priority)
+
+        ## Print centroid gridcells
+        pointList = gridList_to_pointList(map, centroid_gridlist)
         
-        # return frontiersPriorityQueue.get()
+        gridCell = GridCells()
+        gridCell.header.frame_id = 'map'
+        gridCell.cell_width = map.info.resolution
+        gridCell.cell_height = map.info.resolution
+        gridCell.cells = pointList
+
+        self.centroid_pub.publish(gridCell)
+
+        priorityFrontier = frontiersPriorityQueue.get()
+        print(priorityFrontier)
+        
+        priorityFrontier_PoseStamped = grid_to_world(map, *priorityFrontier)
+        print(priorityFrontier_PoseStamped)
+        # return priorityFrontier_PoseStamped
 
 
     def getCSpace(self):
@@ -108,24 +130,25 @@ class FrontierExploration:
         # pass
 
         
-    def calcCentroid(self,mapdata, cells):
+    def calcCentroid(self, cells):
         
-       frontier_cells = []
+        # frontier_cells = []
 
-       x_coordinate = [c[0] for c in cells]
-       y_coordinate = [c[1] for c in cells]
+        x_coordinate = [c[0] for c in cells]
+        y_coordinate = [c[1] for c in cells]
 
-       n = len(cells)
-       
-       centroid_x = sum(x_coordinate)/n
-       centroid_y = sum(y_coordinate)/n
+        n = len(cells)
+        
+        centroid_x = sum(x_coordinate)/n
+        centroid_y = sum(y_coordinate)/n
 
-       append.frontier_cells([centroid_x,centroid_y])
+        # frontier_cells.append((centroid_x, centroid_y))
 
-       return frontier_cells
+        # return frontier_cells
+        return (centroid_x, centroid_y)
 
     
-    def calcLength(self, mapdata, bin):
+    def calcLength(self, bin):
 
         return len(bin)
 
@@ -158,17 +181,10 @@ class FrontierExploration:
     
     
     def segmentFrontiers(self, mapdata):
-        
-        ## Code taken and adapted from GeeksForGeeks article 
-        # Python — Group Adjacent Coordinates
-        # https://www.geeksforgeeks.org/python-group-adjacent-coordinates/amp/
-        
-        # Code adapted to do diagonal neighbors as well as adjacent
-        # Code fixed as well to format the list of lists and store in global bin
 
         frontier_cells = self._frontier_cells
         
-        tuple_pairs = [sorted(pair) for pair in product(frontier_cells, repeat=2) if euclidean_distance(*pair) <= 1.5]
+        tuple_pairs = [sorted(pair) for pair in product(frontier_cells, repeat=2) if euclidean_distance_tups(*pair) <= 1.5]
 
         result_dict = {t: {t} for t in frontier_cells}
         for t1, t2 in tuple_pairs:
@@ -178,81 +194,6 @@ class FrontierExploration:
 
         result = [list((next(g))) for k, g in groupby(sorted(result_dict.values(), key=id), id)]
         self._frontiers_bin = result
-        # frontier_cells.sort(key=lambda y: y[1])
-
-        # tempBin = defaultdict(lambda : [])
-        # tempBin[0] = []
-        # counter = 0
-
-        # for frontier_cell in frontier_cells:
-        #     print(frontier_cell)
-
-        #     if frontier_cell == frontier_cells[0]:
-                
-        #         tempBin[0].append(frontier_cell)
-
-        #     else:
-
-        #         neighbors = neighbors_of_8_unknown(mapdata, *frontier_cell)
-
-        #         for key in tempBin.keys():
-
-        #             if not set(neighbors).isdisjoint(set(tempBin.get(key))):
-
-        #                 tempBin[key].append(frontier_cell)
-
-        #             else:
-
-        #                 counter += 1
-        #                 tempBin[counter].append(frontier_cell)
-
-        # for key in tempBin.keys():
-
-        #     self._frontiers_bin.append(tempBin[key])
-        
-
-
-        # man_tups = [sorted(sub) for sub in product(frontier_cells, repeat = 2)
-        #                                     if euclidean_distance(*sub) <= 1.5]
-        
-
-        # res_dict = {ele: {ele} for ele in frontier_cells}
-
-        # for tup1, tup2 in man_tups:
-        #     res_dict[tup1] |= res_dict[tup2]
-        #     res_dict[tup2] = res_dict[tup1]
-        
-
-        # res = [[*next(val)] for key, val in groupby(sorted(res_dict.values(), key = id), id)]
-
-        # self._frontiers_bin = res
-        
-        # self._frontiers_bin = []
-
-        # neighborList = []
-        # tempBin = []
-
-        # while self._frontier_cells:
-
-        #     for point in self._frontier_cells:
-                
-        #         self._frontier_cells.remove(point)
-        #         tempBin.append(point)
-                
-        #         neighborList = neighbors_of_8_unknown(mapdata, point[0], point[1])
-                
-
-        #         for neighbor in neighborList:
-        #             tempBin.append(neighbor)
-                
-        #         for neighbor in neighborList:
-        #             self.segmentFrontiers(mapdata, neighborList)
-
-        #     if not neighborList:
-        #         differenceBin = list(set(tempBin) - set(self._frontier_cells))
-        #         self._frontiers_bin.append(differenceBin)
-        #         tempBin = []
-        #         differenceBin = []
                     
 
     def update_odometry(self, msg):
