@@ -97,7 +97,7 @@ class Navigation:
 
         distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2)) 
 
-        TOLERANCE = 0.1
+        TOLERANCE = 0.035
 
         self.send_speed(linear_speed, 0)
 
@@ -167,7 +167,7 @@ class Navigation:
         :param msg [PoseStamped] The target pose.
         """
         ### REQUIRED CREDIT
-
+        rospy.loginfo('GO TO')
         ### MATH FOR X AND Y DISTANCE
         px_0 = self.px
         py_0 = self.py

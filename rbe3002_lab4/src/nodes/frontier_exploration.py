@@ -96,11 +96,12 @@ class FrontierExploration:
             length = self.calcLength(self._frontiers_bin[i])
             print(length)
 
-            priority = distance/length
-
+            # priority = 10*distance/length
+            priority = 0.75*0.1*distance + 0.25*length
             # print(grid_to_world(map, *centroid), centroid, distance, length, priority)
 
-            frontiersPriorityQueue.put(centroid, priority)
+            if (map.data[grid_to_index(map, *centroid)] != -1 and map.data[grid_to_index(map, *centroid)] != 100):
+                frontiersPriorityQueue.put(centroid, priority)
 
             if (not frontier_to_explore and length > 1):
                 frontier_to_explore = True

@@ -9,6 +9,7 @@ from geometry_msgs.msg import Point, Pose, PoseStamped
 from rbe3002_lab4.srv import PoseStampedServices
 from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from scripts.map_functions import *
 
 
 class Lab4Client:
@@ -69,9 +70,10 @@ class Lab4Client:
 
 
 
-
+        self.old_frontier = PoseStamped()
         self.goal_frontier = PoseStamped()
         self.path = 0
+        self.first_run = True
 
         # Create publisher
         # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
@@ -96,7 +98,7 @@ class Lab4Client:
     def state_machine(self):
 
         # Phase State Machine
-        print(self.phase1_state)
+        # print(self.phase1_state)
 
         if (self.phase_state == self.PHASE_1):
 
@@ -104,7 +106,19 @@ class Lab4Client:
                 print('Getting Frontier')
                 frontier_node_response = self.get_frontier_client()
                 print(frontier_node_response)
-                self.goal_frontier = frontier_node_response[0]
+                self.old_frontier = self.goal_frontier
+                temp_frontier = frontier_node_response[0]
+                distance_frontier = euclidean_distance(self.old_frontier.pose.position.x, 
+                                                        self.old_frontier.pose.position.y, 
+                                                        temp_frontier.pose.position.x, 
+                                                        temp_frontier.pose.position.y)
+
+                if (distance_frontier > 0.2):
+                    self.goal_frontier = temp_frontier
+                elif (self.first_run):
+                    self.goal_frontier = temp_frontier
+                    self.first_run = False
+
                 frontiers_to_explore = frontier_node_response[1]
 
                 # print('Goal frontier is ', goal_frontier)
@@ -126,12 +140,33 @@ class Lab4Client:
                 self.phase1_state = self.NAVIGATE_PATH
 
             elif (self.phase1_state == self.NAVIGATE_PATH):
-                print('Navigation starting')
-                for i in range(len(self.path)):
-                    self.navigation_client(self.path[i])
-
-                print('Completed Navigation')
+                print(self.path)
+                # if (len(self.path) == 2):
+                #     self.navigation_client(self.path[1])
+                #     self.phase1_state = self.GET_FRONTIER
+                # else:
+                self.navigation_client(self.path[1])
                 self.phase1_state = self.GET_FRONTIER
+
+                # print('Navigation starting')
+                # i = 1
+                # print("PATH", self.path)
+                # while i < len(self.path):
+                # # for i in range(len(self.path)):
+                #     print(" i = ", i)
+                #     # if i != 0:
+                #     if (len(self.path) == 1):
+                #         i = 0
+
+                #     self.navigation_client(self.path[i])
+                #     self.path = self.plan_path_client(self.goal_frontier)
+                #     i = 1
+                    # else:
+                    #     i += 1
+
+
+                # print('Completed Navigation')
+                # self.phase1_state = self.GET_FRONTIER
                 # rospy.spin()
 
         elif (self.phase_state == self.PHASE_2):
@@ -172,7 +207,7 @@ class Lab4Client:
         
         # goal = msg
 
-        print(start, goal)
+        # print(start, goal)
 
         tolerance = 0.05
         rospy.loginfo("Requesting the path")
@@ -180,6 +215,7 @@ class Lab4Client:
         pathdata = rospy.ServiceProxy('plan_path', GetPlan)
         try:
             resp1 = pathdata(start, goal, tolerance)
+            # return resp1.plan.poses
             # self.path_pub.publish(resp1.plan)
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
