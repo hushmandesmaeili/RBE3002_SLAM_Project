@@ -101,6 +101,7 @@ class Lab4Client:
         if (self.phase_state == self.PHASE_1):
 
             if (self.phase1_state == self.GET_FRONTIER):
+                print('Getting Frontier')
                 frontier_node_response = self.get_frontier_client()
                 print(frontier_node_response)
                 self.goal_frontier = frontier_node_response[0]
@@ -109,10 +110,10 @@ class Lab4Client:
                 # print('Goal frontier is ', goal_frontier)
 
                 if (not frontiers_to_explore):
-                    print('Completed Phase 1')
+                    print('Phase 1 COMPLETED')
                     self.phase_state == self.PHASE_2
                 else:
-                    print('Completed Frontier Explore')
+                    print('Completed Frontier')
                     self.phase1_state = self.PLAN_PATH
 
             elif (self.phase1_state == self.PLAN_PATH):
@@ -123,11 +124,12 @@ class Lab4Client:
                 self.phase1_state = self.NAVIGATE_PATH
 
             elif (self.phase1_state == self.NAVIGATE_PATH):
-                for waypoint in self.path:
-                    self.navigation_client(waypoint)
+                print('Navigation starting')
+                for i in range(len(self.path)):
+                    self.navigation_client(self.path[i])
 
                 print('Completed Navigation')
-                self.phase1_state == self.GET_FRONTIER
+                self.phase1_state = self.GET_FRONTIER
                 # rospy.spin()
 
         elif (self.phase_state == self.PHASE_2):

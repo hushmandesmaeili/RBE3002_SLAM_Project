@@ -341,7 +341,7 @@ class PathPlanner:
         path = PathPlanner.CameFrom_to_Path(mapdata, start, goal, came_from)
         path.reverse()
 
-        # self.publishPath(mapdata, path)
+        self.publishPath(mapdata, path)
         # optimized = self.optimize_path(path)
         # self.publishPath(mapdata, optimized)
         
