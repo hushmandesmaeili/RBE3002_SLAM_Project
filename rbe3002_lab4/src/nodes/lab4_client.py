@@ -116,6 +116,8 @@ class Lab4Client:
                     print('Completed Frontier')
                     self.phase1_state = self.PLAN_PATH
 
+
+            ## FIND A WAY TO PLAN PATH AND NAVIGATE AT THE SAME TIME
             elif (self.phase1_state == self.PLAN_PATH):
                 print('Planning path')
                 # print(goal_frontier)
