@@ -6,9 +6,10 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
+from geometry_msgs.msg import Twist
 from rbe3002_lab4.srv import PoseStampedServices
 from priority_queue import PriorityQueue
-
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 
 class Navigation:
@@ -33,9 +34,12 @@ class Navigation:
         # rospy.Subscriber('/robot_path', Path, self.follow_path)
         self.navigate_service = rospy.Service('navigate_to', PoseStampedServices, self.go_to)
 
+        # Initialize node
+        rospy.init_node("navigation")
+
         # Give ROS time to initial nodes
         rospy.sleep(1.0)
-        rospy.loginfo("Navigation node ready")
+        rospy.loginfo("navigation node ready")
 
     # def update_path(self, msg):
     #     self.path = msg.poses
@@ -82,7 +86,7 @@ class Navigation:
         pth_0 = self.pth
 
         aspeed = 0.1
-        kp_th = 10
+        kp_th = 12
 
         px_goal = px_0 + distance*math.cos(pth_0)
         py_goal = py_0 + distance*math.sin(pth_0)
@@ -167,8 +171,8 @@ class Navigation:
         ### MATH FOR X AND Y DISTANCE
         px_0 = self.px
         py_0 = self.py
-        px_goal = msg.pose.position.x
-        py_goal = msg.pose.position.y
+        px_goal = msg.pose.pose.position.x
+        py_goal = msg.pose.pose.position.y
         # print(px_goal, py_goal)
 
         ### MATH FOR THETA DISTANCE FOR ROTATION 1
@@ -177,14 +181,20 @@ class Navigation:
 
         # CODE FOR FIRST ROTATION
         angle_distance = pth_goal_1 - pth_0
-        self.rotate(angle_distance, 0.30)
+        self.rotate(angle_distance, 0.15)
         rospy.sleep(1)
 
         # CODE FOR DRIVING TO GOAL
         linear_distance = math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2)
-        print(linear_distance)
-        self.drive(linear_distance, 0.2)
+        # print(linear_distance)
+        self.drive(linear_distance, 0.15)
         rospy.sleep(1)
+
+        empty = PoseStamped()
+
+        resp = {'pose': empty, 'frontiers': True}
+
+        return resp
 
         # # CODE FOR SECOND ROTATION
         # ### MATH FOR THETA DISTANCE FOR ROTATION 2

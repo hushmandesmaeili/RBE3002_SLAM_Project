@@ -43,7 +43,7 @@ class ConfigSpace:
         # Initialize node
         rospy.init_node("cspace")
 
-        rospy.sleep(3.0)
+        rospy.sleep(1.5)
         rospy.loginfo("cspace node ready")
 
 
@@ -79,7 +79,7 @@ class ConfigSpace:
         """
 
         ## Constant padding
-        padding = 2
+        padding = 4
 
         self.request_map()
         ## Threshold map

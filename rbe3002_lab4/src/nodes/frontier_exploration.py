@@ -9,7 +9,6 @@ from geometry_msgs.msg import Point, Pose, PoseStamped
 from rbe3002_lab4.srv import PoseStampedServices
 from priority_queue import PriorityQueue
 from scripts.map_functions import *
-# from collections import defaultdict
 from itertools import groupby, product
 
 
@@ -22,8 +21,8 @@ class FrontierExploration:
         Class constructor
         """
 
-        self.px = 0
-        self.py = 0
+        # self.px = 0
+        # self.py = 0
 
         self._frontier_cells = []
         self._frontiers_bin = []
@@ -42,7 +41,7 @@ class FrontierExploration:
         # infoSub = rospy.Subscriber('map_metadata', MapMetaData, mapInfoCallback)
         # cspaceSub = rospy.Subscriber('map', OccupancyGrid, self.getCSpace)
 
-        odomSub = rospy.Subscriber('/odom', Odometry, self.update_odometry)
+        # odomSub = rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
         # Create services
         self.getFrontier_service = rospy.Service('get_frontier', PoseStampedServices, self.getFrontier)
@@ -50,11 +49,16 @@ class FrontierExploration:
         # Initialize node
         rospy.init_node("frontier_exploration")
         
-        rospy.sleep(1.0)
+        rospy.sleep(2.0)
         rospy.loginfo("frontier_exploration node ready")
 
 
-    def getFrontier(self):
+    def getFrontier(self, msg):
+
+        x_start = msg.pose.pose.position.x
+        y_start = msg.pose.pose.position.y
+
+        frontier_to_explore = False
 
         print("Get CSpace")
         map = self.getCSpace()
@@ -74,7 +78,7 @@ class FrontierExploration:
         # print(self._frontier_cells)
         print("Segment")
         self.segmentFrontiers(map)
-        print(self._frontiers_bin)
+        # print(self._frontiers_bin)
 
         centroid_gridlist = []
 
@@ -83,19 +87,23 @@ class FrontierExploration:
             centroid = self.calcCentroid(self._frontiers_bin[i])
             centroid_gridlist.append(centroid)
 
-            x_start = self.px
-            y_start = self.py
+            # x_start = self.px
+            # y_start = self.py
             x_goal = centroid[0]
             y_goal = centroid[1]
             distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
             
             length = self.calcLength(self._frontiers_bin[i])
+            print(length)
 
             priority = distance/length
 
-            print(grid_to_world(map, *centroid), centroid, distance, length, priority)
+            # print(grid_to_world(map, *centroid), centroid, distance, length, priority)
 
             frontiersPriorityQueue.put(centroid, priority)
+
+            if (not frontier_to_explore and length > 1):
+                frontier_to_explore = True
 
         ## Print centroid gridcells
         pointList = gridList_to_pointList(map, centroid_gridlist)
@@ -109,11 +117,16 @@ class FrontierExploration:
         self.centroid_pub.publish(gridCell)
 
         priorityFrontier = frontiersPriorityQueue.get()
-        print(priorityFrontier)
+        # print(priorityFrontier)
         
-        priorityFrontier_PoseStamped = grid_to_world(map, *priorityFrontier)
-        print(priorityFrontier_PoseStamped)
+        priorityFrontier_PoseStamped = PoseStamped()
+        priorityFrontier_PoseStamped.pose.position = grid_to_world(map, *priorityFrontier)
+        # print(priorityFrontier_PoseStamped)
+
+        resp = {'pose': priorityFrontier_PoseStamped, 'frontiers': frontier_to_explore}
+
         # return priorityFrontier_PoseStamped
+        return resp
 
 
     def getCSpace(self):
@@ -196,21 +209,21 @@ class FrontierExploration:
         self._frontiers_bin = result
                     
 
-    def update_odometry(self, msg):
-        """
-        Updates the current pose of the robot.
-        This method is a callback bound to a Subscriber.
-        :param msg [Odometry] The current odometry information.
-        """
-        ### REQUIRED CREDIT
-        self.px = msg.pose.pose.position.x
-        self.py = msg.pose.pose.position.y
+    # def update_odometry(self, msg):
+    #     """
+    #     Updates the current pose of the robot.
+    #     This method is a callback bound to a Subscriber.
+    #     :param msg [Odometry] The current odometry information.
+    #     """
+    #     ### REQUIRED CREDIT
+    #     self.px = msg.pose.pose.position.x
+    #     self.py = msg.pose.pose.position.y
     
     def run(self):
         """
         Runs the node until Ctrl-C is pressed.
         """
-        self.getFrontier()
+        # self.getFrontier()
         rospy.spin()
 
         

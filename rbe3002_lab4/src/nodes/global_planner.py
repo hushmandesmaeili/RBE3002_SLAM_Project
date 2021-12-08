@@ -218,13 +218,24 @@ class PathPlanner:
     #     """
     #     ### REQUIRED CREDIT
     #     rospy.loginfo("Requesting the map")
-    #     rospy.wait_for_service('/static_map')
+    #     rospy.wait_for_service('/get_padded_map')
     #     mapdata = rospy.ServiceProxy('/static_map', GetMap)
     #     try:
     #         resp1 = mapdata()
     #     except rospy.ServiceException as exc:
     #         print("Service did not process request: " + str(exc))
     #     return resp1.map
+
+    def getCSpace(self):
+        rospy.loginfo("Requesting the cspace map")
+        rospy.wait_for_service('get_padded_map')
+        mapdata = rospy.ServiceProxy('get_padded_map', GetMap)
+        try:
+            resp1 = mapdata()
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+
+        return resp1.map
 
 
     # def calc_cspace(self, mapdata, padding):
@@ -304,11 +315,11 @@ class PathPlanner:
             
             if current == goal:
                 visited.append(current)
-                self.publishFrontier(mapdata, frontier)
-                self.publishVisited(mapdata, visited)
+                # self.publishFrontier(mapdata, frontier)
+                # self.publishVisited(mapdata, visited)
                 break
 
-            for next in self.neighbors_of_8(mapdata, current[0], current[1]):
+            for next in neighbors_of_8(mapdata, current[0], current[1]):
                 current_pose_stamped = Grid_to_PoseStamped(mapdata, current)
                 next_pose_stamped = Grid_to_PoseStamped(mapdata, next)
 
@@ -323,18 +334,18 @@ class PathPlanner:
                     frontier.put(next, priority)
                     came_from[next] = current
 
-            visited.append(current)
-            self.publishFrontier(mapdata, frontier)
-            self.publishVisited(mapdata, visited)
+            # visited.append(current)
+            # self.publishFrontier(mapdata, frontier)
+            # self.publishVisited(mapdata, visited)
 
-        path = CameFrom_to_Path(mapdata, start, goal, came_from)
+        path = PathPlanner.CameFrom_to_Path(mapdata, start, goal, came_from)
         path.reverse()
 
         # self.publishPath(mapdata, path)
         # optimized = self.optimize_path(path)
         # self.publishPath(mapdata, optimized)
         
-        path_pose_stamped = self.path_to_message(mapdata, path)
+        # path_pose_stamped = self.path_to_message(mapdata, path)
 
         # return path_pose_stamped
         return path
@@ -460,7 +471,7 @@ class PathPlanner:
         y_current = first.pose.position.y
         x_goal = second.pose.position.x
         y_goal = second.pose.position.y
-        cost = self.euclidean_distance(x_current, y_current, x_goal, y_goal)
+        cost = euclidean_distance(x_current, y_current, x_goal, y_goal)
         return cost
 
 
@@ -545,17 +556,20 @@ class PathPlanner:
         """
         ## Request the map
         ## In case of error, return an empty path
-        mapdata = PathPlanner.request_map()
+        # mapdata = PathPlanner.request_map()
+        print('Getting CSpace')
+        mapdata = self.getCSpace()
         if mapdata is None:
             return Path()
         ## Calculate the C-space and publish it
-        cspacedata = self.calc_cspace(mapdata, 1)
+        # cspacedata = self.calc_cspace(mapdata, 2)
         ## Execute A*
         # start = PathPlanner.world_to_grid(mapdata, msg.start.pose.position)
         # goal  = PathPlanner.world_to_grid(mapdata, msg.goal.pose.position)
         start = msg.start
         goal = msg.goal
-        path = self.a_star(cspacedata, start, goal)
+        print('Getting path')
+        path = self.a_star(mapdata, start, goal)
         ## Optimize waypoints
         waypoints = PathPlanner.optimize_path(path)
         ## Return a Path message

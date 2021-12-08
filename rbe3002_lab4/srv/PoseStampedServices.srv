@@ -1,3 +1,4 @@
-geometry_msgs/PoseStamped pose1
+geometry_msgs/PoseStamped pose
 ---
-geometry_msgs/PoseStamped pose2
+geometry_msgs/PoseStamped pose
+bool frontiers
