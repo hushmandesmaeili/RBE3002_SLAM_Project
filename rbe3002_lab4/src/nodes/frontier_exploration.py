@@ -94,7 +94,7 @@ class FrontierExploration:
             distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
             
             length = self.calcLength(self._frontiers_bin[i])
-            print(length)
+            # print(length)
 
             # priority = 10*distance/length
             priority = 0.75*0.1*distance + 0.25*length

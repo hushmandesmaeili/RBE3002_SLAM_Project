@@ -97,7 +97,7 @@ class Navigation:
 
         distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2)) 
 
-        TOLERANCE = 0.035
+        TOLERANCE = 0.02
 
         self.send_speed(linear_speed, 0)
 

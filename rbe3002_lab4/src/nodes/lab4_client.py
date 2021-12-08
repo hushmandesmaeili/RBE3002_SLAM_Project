@@ -105,7 +105,7 @@ class Lab4Client:
             if (self.phase1_state == self.GET_FRONTIER):
                 print('Getting Frontier')
                 frontier_node_response = self.get_frontier_client()
-                print(frontier_node_response)
+                # print(frontier_node_response)
                 self.old_frontier = self.goal_frontier
                 temp_frontier = frontier_node_response[0]
                 distance_frontier = euclidean_distance(self.old_frontier.pose.position.x, 
@@ -128,6 +128,7 @@ class Lab4Client:
                     self.phase_state == self.PHASE_2
                 else:
                     print('Completed Frontier')
+                    print(self.goal_frontier)
                     self.phase1_state = self.PLAN_PATH
 
 
