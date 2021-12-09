@@ -6,7 +6,8 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
-from rbe3002_lab4.srv import PoseStampedServices
+# from rbe3002_lab4.srv import PoseStampedServices
+from rbe3002_lab4.srv import FrontierReachable
 from priority_queue import PriorityQueue
 from scripts.map_functions import *
 from itertools import groupby, product
@@ -44,7 +45,7 @@ class FrontierExploration:
         # odomSub = rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
         # Create services
-        self.getFrontier_service = rospy.Service('get_frontier', PoseStampedServices, self.getFrontier)
+        self.getFrontier_service = rospy.Service('get_frontier', GetFrontier, self.getFrontier)
         
         # Initialize node
         rospy.init_node("frontier_exploration")
@@ -52,8 +53,22 @@ class FrontierExploration:
         rospy.sleep(2.0)
         rospy.loginfo("frontier_exploration node ready")
 
+    def isFrontierReachable(self, poseFrontier, poseStart):
+
+        rospy.loginfo("Requesting frontier reachability")
+        rospy.wait_for_service('frontier_reachable')
+        reachable = rospy.ServiceProxy('frontier_reachable', FrontierReachable)
+        try:
+            resp1 = reachable(poseFrontier, poseStart)
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+
+        return resp1
+
 
     def getFrontier(self, msg):
+
+        poseStart = msg.pose
 
         x_start = msg.pose.pose.position.x
         y_start = msg.pose.pose.position.y
@@ -101,10 +116,16 @@ class FrontierExploration:
             # print(grid_to_world(map, *centroid), centroid, distance, length, priority)
 
             if (map.data[grid_to_index(map, *centroid)] != -1 and map.data[grid_to_index(map, *centroid)] != 100):
-                frontiersPriorityQueue.put(centroid, priority)
+                
 
-            if (not frontier_to_explore and length > 1):
-                frontier_to_explore = True
+                frontier_PoseStamped = PoseStamped()
+                frontier_PoseStamped.pose.position = grid_to_world(map, *centroid)
+                
+                if (self.isFrontierReachable(frontier_PoseStamped, poseStart)):
+                    frontiersPriorityQueue.put(centroid, priority)
+
+            # if (not frontier_to_explore and length > 1):
+            #     frontier_to_explore = True
 
         ## Print centroid gridcells
         pointList = gridList_to_pointList(map, centroid_gridlist)
@@ -117,12 +138,17 @@ class FrontierExploration:
 
         self.centroid_pub.publish(gridCell)
 
-        priorityFrontier = frontiersPriorityQueue.get()
-        # print(priorityFrontier)
-        
+        frontier_to_explore = not frontiersPriorityQueue.empty()
+
         priorityFrontier_PoseStamped = PoseStamped()
-        priorityFrontier_PoseStamped.pose.position = grid_to_world(map, *priorityFrontier)
-        # print(priorityFrontier_PoseStamped)
+
+        if(frontier_to_explore):
+            priorityFrontier = frontiersPriorityQueue.get()
+
+            # print(priorityFrontier)
+        
+            priorityFrontier_PoseStamped.pose.position = grid_to_world(map, *priorityFrontier)
+            print(priorityFrontier_PoseStamped)
 
         resp = {'pose': priorityFrontier_PoseStamped, 'frontiers': frontier_to_explore}
 

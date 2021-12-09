@@ -32,6 +32,8 @@ class PathPlanner:
         self.frontier_pub = rospy.Publisher('/path_planner/frontier', GridCells, queue_size=10)
         self.visited_pub = rospy.Publisher('/path_planner/visited', GridCells, queue_size=10)
         self.path_pub = rospy.Publisher('/path_planner/path', GridCells, queue_size=10)
+        # Create Services
+        self.isFrontierReachable_service = rospy.Service('frontier_reachable', FrontierReachable, self.isFrontierReachable)
         ## Initialize the request counter
         # TODO
         ## Sleep to allow roscore to do some housekeeping
@@ -574,6 +576,28 @@ class PathPlanner:
         waypoints = PathPlanner.optimize_path(path)
         ## Return a Path message
         return self.path_to_message(mapdata, waypoints)
+
+    def isFrontierReachable(self, msg):
+
+        poseFrontier = msg.poseFrontier
+
+        print('Getting CSpace')
+        mapdata = self.getCSpace()
+
+        if mapdata is None:
+            return Path()
+
+        start = msg.poseStart
+
+        print('Getting path')
+        
+        try:
+            path = self.a_star(mapdata, start, poseFrontier)
+            return True
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+            return False
+
 
     
     

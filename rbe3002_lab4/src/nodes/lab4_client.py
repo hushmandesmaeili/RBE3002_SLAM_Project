@@ -6,7 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
-from rbe3002_lab4.srv import PoseStampedServices
+from rbe3002_lab4.srv import Navigation, FrontierReachable, GetFrontier
 from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from scripts.map_functions import *
@@ -186,7 +186,7 @@ class Lab4Client:
 
         rospy.loginfo("Requesting navigation")
         rospy.wait_for_service('navigate_to')
-        go_to = rospy.ServiceProxy('navigate_to', PoseStampedServices)
+        go_to = rospy.ServiceProxy('navigate_to', Navigation)
         try:
             resp1 = go_to(goal)
         except rospy.ServiceException as exc:
@@ -230,7 +230,7 @@ class Lab4Client:
 
         rospy.loginfo("Requesting the frontier")
         rospy.wait_for_service('get_frontier')
-        getFrontier = rospy.ServiceProxy('get_frontier', PoseStampedServices)
+        getFrontier = rospy.ServiceProxy('get_frontier', GetFrontier)
         try:
             resp1 = getFrontier(self.currentPoseStamped)
         except rospy.ServiceException as exc:

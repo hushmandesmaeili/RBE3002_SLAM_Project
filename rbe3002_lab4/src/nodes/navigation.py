@@ -7,7 +7,7 @@ from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
 from geometry_msgs.msg import Twist
-from rbe3002_lab4.srv import PoseStampedServices
+from rbe3002_lab4.srv import NNavigation
 from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
@@ -32,7 +32,7 @@ class Navigation:
         rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
         # rospy.Subscriber('/robot_path', Path, self.follow_path)
-        self.navigate_service = rospy.Service('navigate_to', PoseStampedServices, self.go_to)
+        self.navigate_service = rospy.Service('navigate_to', Navigation, self.go_to)
 
         # Initialize node
         rospy.init_node("navigation")
@@ -189,12 +189,6 @@ class Navigation:
         # print(linear_distance)
         self.drive(linear_distance, 0.15)
         rospy.sleep(1)
-
-        empty = PoseStamped()
-
-        resp = {'pose': empty, 'frontiers': True}
-
-        return resp
 
         # # CODE FOR SECOND ROTATION
         # ### MATH FOR THETA DISTANCE FOR ROTATION 2

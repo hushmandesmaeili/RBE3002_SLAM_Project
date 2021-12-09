@@ -1,0 +1,4 @@
+geometry_msgs/PoseStamped poseFrontier
+geometry_msgs/PoseStamped poseStart
+---
+bool reachable
