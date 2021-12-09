@@ -7,7 +7,7 @@
 	<node name="tf_pub" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /odom 100"/>
 
 	<!--launch world and robot -->
-	<!-- <include file="$(find rbe3002_final)/launch/maze_sim.launch"/> -->
+    <include file="$(find rbe3002_final)/launch/maze_sim.launch"/> 
 
 	<!-- TurtleBot3 -->
 	<include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch">
@@ -30,8 +30,8 @@
 	<!-- global_planner node -->
 	<node pkg="rbe3002_lab4" type="global_planner.py" name="global_planner"/>
 
-	<!-- navigation node --> 
-	<node pkg="rbe3002_lab4" type="navigation.py" name="navigation"/>
+	<!-- navigation node 
+	<node pkg="rbe3002_lab4" type="navigation.py" name="navigation"/>-->
 
 	<!-- Lab4Client node -->
 	<node pkg="rbe3002_lab4" type="Lab4Client.py" name="Lab4Client"/>

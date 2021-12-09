@@ -6,7 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
-from rbe3002_lab4.srv import Navigation, FrontierReachable, GetFrontier
+from rbe3002_lab4.srv import NavigateTo, FrontierReachable, GetFrontier
 from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from scripts.map_functions import *
@@ -74,6 +74,7 @@ class Lab4Client:
         self.goal_frontier = PoseStamped()
         self.path = 0
         self.first_run = True
+        self.count = 1
 
         # Create publisher
         # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
@@ -146,6 +147,7 @@ class Lab4Client:
                 #     self.navigation_client(self.path[1])
                 #     self.phase1_state = self.GET_FRONTIER
                 # else:
+                
                 self.navigation_client(self.path[1])
                 self.phase1_state = self.GET_FRONTIER
 
@@ -186,7 +188,7 @@ class Lab4Client:
 
         rospy.loginfo("Requesting navigation")
         rospy.wait_for_service('navigate_to')
-        go_to = rospy.ServiceProxy('navigate_to', Navigation)
+        go_to = rospy.ServiceProxy('navigate_to', NavigateTo)
         try:
             resp1 = go_to(goal)
         except rospy.ServiceException as exc:

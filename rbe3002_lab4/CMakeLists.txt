@@ -60,7 +60,7 @@ add_service_files(
   FILES
   GetFrontier.srv
   FrontierReachable.srv
-  Navigation.srv
+  NavigateTo.srv
 )
 
 ## Generate actions in the 'action' folder

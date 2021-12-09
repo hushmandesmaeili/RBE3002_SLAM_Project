@@ -7,7 +7,7 @@ from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
 # from rbe3002_lab4.srv import PoseStampedServices
-from rbe3002_lab4.srv import FrontierReachable
+from rbe3002_lab4.srv import FrontierReachable, GetFrontier
 from priority_queue import PriorityQueue
 from scripts.map_functions import *
 from itertools import groupby, product
@@ -127,6 +127,7 @@ class FrontierExploration:
             # if (not frontier_to_explore and length > 1):
             #     frontier_to_explore = True
 
+        print('Finished For-loop done')
         ## Print centroid gridcells
         pointList = gridList_to_pointList(map, centroid_gridlist)
         

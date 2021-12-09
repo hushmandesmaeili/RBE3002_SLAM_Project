@@ -6,6 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
+from rbe3002_lab4.srv import FrontierReachable
 from priority_queue import PriorityQueue
 from scripts.map_functions import *
 

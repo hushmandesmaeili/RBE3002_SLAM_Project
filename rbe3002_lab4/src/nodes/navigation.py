@@ -7,7 +7,7 @@ from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
 from geometry_msgs.msg import Twist
-from rbe3002_lab4.srv import NNavigation
+from rbe3002_lab4.srv import NavigateTo
 from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
@@ -32,7 +32,7 @@ class Navigation:
         rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
         # rospy.Subscriber('/robot_path', Path, self.follow_path)
-        self.navigate_service = rospy.Service('navigate_to', Navigation, self.go_to)
+        self.navigate_service = rospy.Service('navigate_to', NavigateTo, self.go_to)
 
         # Initialize node
         rospy.init_node("navigation")
@@ -97,7 +97,7 @@ class Navigation:
 
         distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2)) 
 
-        TOLERANCE = 0.02
+        TOLERANCE = 0.03
 
         self.send_speed(linear_speed, 0)
 
