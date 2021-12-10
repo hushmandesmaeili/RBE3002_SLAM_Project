@@ -60,10 +60,11 @@ class FrontierExploration:
         reachable = rospy.ServiceProxy('frontier_reachable', FrontierReachable)
         try:
             resp1 = reachable(poseFrontier, poseStart)
+            return resp1
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
 
-        return resp1
+        # return resp1
 
 
     def getFrontier(self, msg):
@@ -124,7 +125,7 @@ class FrontierExploration:
             # print(length)
 
             # priority = 10*distance/length
-            priority = 0.75*0.1*distance + 0.25*length
+            priority = 0.9*0.1*distance + 0.1*length
             # print(grid_to_world(map, *centroid), centroid, distance, length, priority)
 
             #if (map.data[grid_to_index(map, *centroid)] != -1 and map.data[grid_to_index(map, *centroid)] != 100):

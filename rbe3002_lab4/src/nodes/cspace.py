@@ -6,6 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
+from rbe3002_lab4.srv import CSpaceValid
 from priority_queue import PriorityQueue
 from scripts.map_functions import *
 
@@ -39,6 +40,7 @@ class ConfigSpace:
         # Create services
         self.cspace_service = rospy.Service('get_padded_map', GetMap, self.calc_cspace)
         self.save_map_service = rospy.Service('save_map', GetMap, self.save_map_callBack)
+        self.cspace_valid_service = rospy.Service('check_position_cspace', CSpaceValid, self.pose_valid_callback)
         
         # Initialize node
         rospy.init_node("cspace")
@@ -130,9 +132,84 @@ class ConfigSpace:
 
         return padded_map
 
+        
+    def find_nearest_valid_pose(self, mapdata, startPose):
+        """
+        Code heavily adapted from Favtutor.com: breadth-first search algorithim using neigbors_of_8
+
+        Publishes the list of cells that were added to the original map.
+        :param mapdata [OccupancyGrid] The map data.
+        :param padding [int]           The number of cells around the obstacles.
+        :return        [OccupancyGrid] The C-Space
+        """
+
+
+        not_found_pose = True
+        tempPose = world_to_grid(mapdata, startPose.pose.position)
+        
+        validPose_grid = 0
+        validPose_PoseStamped = PoseStamped()
+
+        visited = []
+        queue = []
+
+        queue.append(tempPose)
+
+        while (not_found_pose):
+
+            tempPose = queue.pop(0)
+            visited.append(tempPose)
+
+            walkable_neighbors = neighbors_of_8(mapdata, *tempPose)
+
+            if (walkable_neighbors):
+                validPose_grid = walkable_neighbors[0]
+                not_found_pose = False
+            else:
+                
+                new_unknown_neighbors = neighbors_of_8_unknown(mapdata, *tempPose)
+                
+                for neighbor in new_unknown_neighbors:
+                    if (neighbor not in visited):
+                        queue.append(neighbor)
+        
+        validPose_PoseStamped.position = grid_to_world(mapdata, *validPose_grid)
+
+        return validPose_PoseStamped
+     
+
+    
+    def is_valid_pose(self, mapdata, startPose):
+
+        gridPose = world_to_grid(mapdata, startPose.pose.position)
+        indexPose = grid_to_index(mapdata, *gridPose)
+
+        if (mapdata.data[indexPose] != -1):
+            return True
+        else:
+            return False
+
+
     def save_map_callBack(self, msg):
         
         pass
+
+    def pose_valid_callback(self, msg):
+
+        current_pose = msg.pose
+        map = self.calc_cspace(1)
+        newPose = PoseStamped()
+
+        if (self.is_valid_pose(map, current_pose)):
+            resp = {'pose': newPose, 'isValid': True}
+
+        else:
+            newPose = self.find_nearest_valid_pose(map, current_pose)
+            resp = {'pose': newPose, 'isValid': False}
+    
+        return resp
+        
+
 
     
     def run(self):

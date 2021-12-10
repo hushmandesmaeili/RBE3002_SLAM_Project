@@ -6,7 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
-from rbe3002_lab4.srv import NavigateTo, FrontierReachable, GetFrontier
+from rbe3002_lab4.srv import NavigateTo, FrontierReachable, GetFrontier, CSpaceValid
 from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from scripts.map_functions import *
@@ -59,9 +59,10 @@ class Lab4Client:
         self.EXIT_STATE = 4
 
         # PHASE 1 States
-        self.GET_FRONTIER = 0
-        self.PLAN_PATH = 1
-        self.NAVIGATE_PATH = 2
+        self.CHECK_POSITION = 0
+        self.GET_FRONTIER = 1
+        self.PLAN_PATH = 2
+        self.NAVIGATE_PATH = 3
 
         # PHASE 2 States
 
@@ -160,25 +161,21 @@ class Lab4Client:
                 #     self.navigation_client(self.path[1])
                 #     self.phase1_state = self.GET_FRONTIER
                 # else:
+                #     waypoint_x = self.path[self.count].pose.position.x
+                #     waypoint_y = self.path[self.count].pose.position.y
+                #     distance_to_waypoint = euclidean_distance(self.px, self.py, waypoint_x, waypoint_y)
                 
-                self.navigation_client(self.path[1])
-                self.phase1_state = self.GET_FRONTIER
+                # while (distance_to_waypoint < 0.03):
+                #     waypoint_x = self.path[self.count].pose.position.x
+                #     waypoint_y = self.path[self.count].pose.position.y
+                #     distance_to_waypoint = euclidean_distance(self.px, self.py, waypoint_x, waypoint_y)
+                #     self.count += 1
 
-                # print('Navigation starting')
-                # i = 1
-                # print("PATH", self.path)
-                # while i < len(self.path):
-                # # for i in range(len(self.path)):
-                #     print(" i = ", i)
-                #     # if i != 0:
-                #     if (len(self.path) == 1):
-                #         i = 0
+                self.navigation_client(self.path[self.count])
+                self.count = 1
+                self.phase1_state = self.CHECK_POSITION
 
-                #     self.navigation_client(self.path[i])
-                #     self.path = self.plan_path_client(self.goal_frontier)
-                #     i = 1
-                    # else:
-                    #     i += 1
+                
 
 
                 # print('Completed Navigation')
@@ -193,6 +190,31 @@ class Lab4Client:
 
         # elif (phase_state == EXIT_STATE):
     
+    
+    def check_position_client(self):
+
+        start = PoseStamped()
+        start.header.frame_id = "odom"
+        start.pose.position.x = self.px
+        start.pose.position.y = self.py
+        orientation = quaternion_from_euler(0, 0, self.pth)
+        start.pose.orientation.x = orientation[0]
+        start.pose.orientation.y = orientation[1]
+        start.pose.orientation.z = orientation[2]
+        start.pose.orientation.w = orientation[3]
+
+        rospy.loginfo("Requesting valid position outside CSpace")
+        rospy.wait_for_service('check_position_cspace')
+        pose_valid = rospy.ServiceProxy('check_position_cspace', CSpaceValid)
+        try:
+            resp1 = pose_valid(start)
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+        
+        response = (resp1.pose, resp1.isValid)
+
+        return response
+
 
     def navigation_client(self, goal):
 

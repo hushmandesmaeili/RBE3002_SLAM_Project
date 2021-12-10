@@ -85,8 +85,20 @@ class Navigation:
         py_0 = self.py
         pth_0 = self.pth
 
+        threshold_start = 0.1
+        threshold_goal = 0.1
+
+        # ## Constants and variables defined
+        # LSPEED = 0.2
+
         aspeed = 0.1
-        kp_th = 12
+        kp_th = 6
+
+        # # Ki value for linear speed, 
+        # # sum of error variable for integral term plus errorBound
+        # ki_lspeed = 0.035
+        # sum_error = 0
+        # errorBound = 10
 
         px_goal = px_0 + distance*math.cos(pth_0)
         py_goal = py_0 + distance*math.sin(pth_0)
@@ -97,14 +109,32 @@ class Navigation:
 
         distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2)) 
 
-        TOLERANCE = 0.03
+        TOLERANCE = 0.02
 
-        self.send_speed(linear_speed, 0)
+        linear_speed_actual = 0.4*linear_speed
+
+        self.send_speed(linear_speed_actual, 0)
 
         while ((distance_error > TOLERANCE)):
+            distance_error_initial = (math.sqrt((px_0 - self.px)**2 + (py_0- self.py)**2))
             distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2))
             heading_error = heading_goal - self.pth
-            self.send_speed(linear_speed, aspeed * heading_error * kp_th)
+
+            # sum_error = sum_error + distance_error
+            # if (sum_error > errorBound):
+            #     sum_error = errorBound
+            # elif (sum_error < -1*errorBound):
+            #     sum_error = -1*errorBound
+
+            # lspeed = LSPEED * (ki_lspeed * sum_error)
+
+            if (distance_error_initial > threshold_start and distance_error > threshold_goal):
+                linear_speed_actual = linear_speed
+            else:
+                linear_speed_actual = 0.3*linear_speed
+
+
+            self.send_speed(linear_speed_actual, aspeed * heading_error * kp_th)
             # print(distance_error)
             rospy.sleep(0.05)
 

@@ -312,7 +312,7 @@ class PathPlanner:
         visited = []
 
         while not frontier.empty():
-            rospy.sleep(0.01)
+            # rospy.sleep(0.01)
 
             current = frontier.get()    ## FRONTIER CURRENT, START, AND GOAL ARE Grid Coordinates 
             
@@ -413,60 +413,6 @@ class PathPlanner:
 
         return path
         
-
-    # @staticmethod
-    # def gridList_to_pointList(mapdata, gridList):
-    #     pointList = []
-
-    #     for elem in gridList:
-    #         pointList.append(grid_to_world(mapdata, elem[0], elem[1]))
-
-    #     return pointList
-
-
-    # @staticmethod
-    # def PoseStamped_to_GridCells(mapdata, pStamped):
-    #     gridcell = GridCells()
-    #     gridcell.header.frame_id = 'map'
-    #     gridcell.cell_width = mapdata.info.resolution
-    #     gridcell.cell_height = mapdata.info.resolutionf
-
-    #     worldPoint = PoseStamped_to_WorldPoint(pStamped)
-    #     gridcell.cells = worldPoint
-
-    #     return gridcell
-
-    # @staticmethod
-    # def Grid_to_PoseStamped(mapdata, grid):
-    #     pose = PoseStamped()
-    #     grid_x = grid[0]
-    #     grid_y = grid[1]
-
-    #     worldPoint = grid_to_world(mapdata, grid_x, grid_y)
-        
-    #     pose.pose.position.x = worldPoint.x
-    #     pose.pose.position.y = worldPoint.y
-
-    #     return pose
-
-
-    # @staticmethod
-    # def PoseStamped_to_GridCoor(mapdata, pStamped):
-    #     worldPoint = PoseStamped_to_WorldPoint(pStamped)
-
-    #     grid_cell = world_to_grid(mapdata, worldPoint)
-
-    #     return grid_cell
-
-
-    # @staticmethod
-    # def PoseStamped_to_WorldPoint(pStamped):
-    #     worldPoint = Point()
-    #     worldPoint.x = pStamped.pose.position.x
-    #     worldPoint.y = pStamped.pose.position.y
-
-    #     return worldPoint
-    
 
     def find_cost(self, first, second):
         ### CALCULATES THE COST TO GO FROM THE CURRENT NODE TO THE NEXT
@@ -594,9 +540,11 @@ class PathPlanner:
         
         try:
             path = self.a_star(mapdata, start, poseFrontier)
+            print('Reachable')
             return True
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
+            print('Unreachable')
             return False
 
 
