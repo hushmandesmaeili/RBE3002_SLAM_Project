@@ -279,7 +279,7 @@ class Navigation:
         ### Initial orientation
         pth_0 = self.pth
         
-        TOLERANCE = 0.02
+        TOLERANCE = 0.015
         
         while (abs(self.px - px_goal) > TOLERANCE or abs(self.py - py_goal) > TOLERANCE):
             pth_goal = math.atan2(py_goal - self.py, px_goal - self.px)

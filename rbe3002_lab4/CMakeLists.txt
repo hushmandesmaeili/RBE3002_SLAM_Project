@@ -61,6 +61,7 @@ add_service_files(
   GetFrontier.srv
   FrontierReachable.srv
   NavigateTo.srv
+  CSpaceValid.srv
 )
 
 ## Generate actions in the 'action' folder

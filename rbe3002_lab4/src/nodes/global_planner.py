@@ -235,59 +235,9 @@ class PathPlanner:
         mapdata = rospy.ServiceProxy('get_padded_map', GetMap)
         try:
             resp1 = mapdata()
+            return resp1.map
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
-
-        return resp1.map
-
-
-    # def calc_cspace(self, mapdata, padding):
-        # """
-        # Calculates the C-Space, i.e., makes the obstacles in the map thicker.
-        # Publishes the list of cells that were added to the original map.
-        # :param mapdata [OccupancyGrid] The map data.
-        # :param padding [int]           The number of cells around the obstacles.
-        # :return        [OccupancyGrid] The C-Space
-        # """
-        
-        # ## Inflate the obstacles where necessary
-        
-        # newmap = mapdata
-        # newmap.data = list(mapdata.data)
-        # CSpace = []
-
-        # for h in range(0, padding):
-
-        #     if (padding > 0):
-                
-        #         for i in range(0, len(newmap.data)):
-                    
-        #             if (newmap.data[i] == 100):
-        #                 grid = PathPlanner.index_to_grid(newmap, i)
-        #                 neighbors = PathPlanner.neighbors_of_8(newmap, grid[0], grid[1])
-                        
-        #                 for k in neighbors:
-        #                     if k not in CSpace:
-        #                         CSpace.append(k)
-
-        #         for j in range(0,len(CSpace)):
-        #             temp_x = CSpace[j][0]
-        #             temp_y = CSpace[j][1]
-        #             paddindex = PathPlanner.grid_to_index(newmap, temp_x, temp_y)
-        #             newmap.data[paddindex] = 100
-
-        # # # ## Create a GridCells message and publish it
-        # for i in range(0,len(CSpace)):
-        #     CSpace[i] = PathPlanner.grid_to_world(newmap, CSpace[i][0], CSpace[i][1])
-
-        # gridCell = GridCells()
-        # gridCell.header.frame_id = 'map'
-        # gridCell.cell_width = newmap.info.resolution
-        # gridCell.cell_height = newmap.info.resolution
-        # gridCell.cells = CSpace
-        # self.Cspace_pub.publish(gridCell)
-
-        # return newmap
 
 
     def a_star(self, mapdata, start, goal):
@@ -326,7 +276,7 @@ class PathPlanner:
                 current_pose_stamped = Grid_to_PoseStamped(mapdata, current)
                 next_pose_stamped = Grid_to_PoseStamped(mapdata, next)
 
-                new_cost = cost_so_far[current] + self.find_cost(current_pose_stamped, next_pose_stamped)
+                new_cost = cost_so_far[current] + self.find_cost(current_pose_stamped, next_pose_stamped) + 1
 
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
                     cost_so_far[next] = new_cost
