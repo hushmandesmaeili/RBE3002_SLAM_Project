@@ -99,13 +99,25 @@ class FrontierExploration:
 
         for i in range(len(self._frontiers_bin)):
 
-            centroid = self.calcCentroid(self._frontiers_bin[i])
-            centroid_gridlist.append(centroid)
+            # centroid = self.calcCentroid(self._frontiers_bin[i])
+            # centroid_gridlist.append(centroid)
 
-            # x_start = self.px
-            # y_start = self.py
-            x_goal = centroid[0]
-            y_goal = centroid[1]
+            # # x_start = self.px
+            # # y_start = self.py
+            current = self._frontiers_bin[i]
+
+            sorted_current = sorted(current)
+
+            middle_value = int(len(sorted_current)/2)
+
+            median_current = sorted_current[middle_value]
+            centroid_gridlist.append(median_current)
+
+            x_goal = median_current[0]
+            y_goal = median_current[1]
+
+
+
             distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
             
             length = self.calcLength(self._frontiers_bin[i])
@@ -115,14 +127,14 @@ class FrontierExploration:
             priority = 0.75*0.1*distance + 0.25*length
             # print(grid_to_world(map, *centroid), centroid, distance, length, priority)
 
-            if (map.data[grid_to_index(map, *centroid)] != -1 and map.data[grid_to_index(map, *centroid)] != 100):
-                
+            #if (map.data[grid_to_index(map, *centroid)] != -1 and map.data[grid_to_index(map, *centroid)] != 100):
+            if (map.data[grid_to_index(map, *median_current)] != -1 and map.data[grid_to_index(map, *median_current)] != 100):   
 
                 frontier_PoseStamped = PoseStamped()
-                frontier_PoseStamped.pose.position = grid_to_world(map, *centroid)
+                frontier_PoseStamped.pose.position = grid_to_world(map, *median_current)
                 
                 if (self.isFrontierReachable(frontier_PoseStamped, poseStart)):
-                    frontiersPriorityQueue.put(centroid, priority)
+                    frontiersPriorityQueue.put(median_current, priority)
 
             # if (not frontier_to_explore and length > 1):
             #     frontier_to_explore = True

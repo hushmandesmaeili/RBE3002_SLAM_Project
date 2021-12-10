@@ -103,6 +103,19 @@ class Lab4Client:
 
         if (self.phase_state == self.PHASE_1):
 
+            if (self.phase1_state == self.CHECK_POSITION):
+                print('checking position')
+                cspace_node_response = self.check_position_client()
+                position_goal = cspace_node_response[0]
+                is_valid_pose = cspace_node_response[1]
+
+                if not(is_valid_pose):
+                    self.navigate_to(position_goal)
+
+                else:
+                    self.phase1_state = self.GET_FRONTIER
+
+
             if (self.phase1_state == self.GET_FRONTIER):
                 print('Getting Frontier')
                 frontier_node_response = self.get_frontier_client()
