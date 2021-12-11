@@ -6,7 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import Point, Pose, PoseStamped
-from rbe3002_lab4.srv import NavigateTo, FrontierReachable, GetFrontier, CSpaceValid
+from rbe3002_lab4.srv import NavigateTo, FrontierReachable, GetFrontier, CSpaceValid, GetFullPlan, PathValid
 from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from scripts.map_functions import *
@@ -74,8 +74,9 @@ class Lab4Client:
         self.old_frontier = PoseStamped()
         self.goal_frontier = PoseStamped()
         self.path = 0
+        self.path_full = 0
         self.first_run = True
-        self.count = 1
+        self.count = 0
 
         # Create publisher
         # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
@@ -102,6 +103,14 @@ class Lab4Client:
         # Phase State Machine
         # print(self.phase1_state)
 
+        initial_x = self.px
+        initial_y = self.py 
+
+        init_pose = PoseStamped()
+        init_pose.pose.position.x = initial_x
+        init_pose.pose.position.y = initial_y
+
+
         if (self.phase_state == self.PHASE_1):
 
             if (self.phase1_state == self.CHECK_POSITION):
@@ -109,9 +118,10 @@ class Lab4Client:
                 cspace_node_response = self.check_position_client()
                 position_goal = cspace_node_response[0]
                 is_valid_pose = cspace_node_response[1]
+                print(is_valid_pose)
 
                 if not(is_valid_pose):
-                    self.navigate_to(position_goal)
+                    self.navigation_client(position_goal)
 
                 else:
                     self.phase1_state = self.GET_FRONTIER
@@ -151,12 +161,42 @@ class Lab4Client:
             elif (self.phase1_state == self.PLAN_PATH):
                 print('Planning path')
                 # print(goal_frontier)
-                self.path = self.plan_path_client(self.goal_frontier)
+                full_path_response = self.plan_path_full_client(self.goal_frontier)
+                print('Full path completed')
+                self.path = full_path_response[1]
+                self.path_full = full_path_response[0]
+
                 print('Completed Plan Path')
                 self.phase1_state = self.NAVIGATE_PATH
 
             elif (self.phase1_state == self.NAVIGATE_PATH):
-                print(self.path)
+                valid_path = self.path_valid_client(self.path_full)
+                # print(valid_path)
+
+                while (valid_path and self.count < (len(self.path) - 1)):
+
+                    print('Checking between ', self.count, ' and ', self.count + 1)
+                    valid_path = self.path_valid_client(self.path_full)
+                    print('Waypoint reachable is ', valid_path)
+
+                    if (valid_path):
+                        print(valid_path)
+
+                        print('Going to waypoint ', self.count + 1)
+                        self.navigation_client(self.path[self.count + 1])
+                        self.count += 1
+                    
+                    
+
+
+
+                # if (self.isFrontierReachable(self.goal_frontier, self.path[self.count])):
+                #     self.phase1_state = self.PLAN_PATH
+                # else:
+                self.phase1_state = self.CHECK_POSITION
+                
+                self.count = 0
+                # print(self.path[1])
                 # if (len(self.path) == 2):
                 #     self.navigation_client(self.path[1])
                 #     self.phase1_state = self.GET_FRONTIER
@@ -171,9 +211,9 @@ class Lab4Client:
                 #     distance_to_waypoint = euclidean_distance(self.px, self.py, waypoint_x, waypoint_y)
                 #     self.count += 1
 
-                self.navigation_client(self.path[self.count])
-                self.count = 1
-                self.phase1_state = self.CHECK_POSITION
+                # self.navigation_client(self.path[self.count])
+                # self.count = 1
+                # self.phase1_state = self.CHECK_POSITION
 
                 
 
@@ -184,6 +224,10 @@ class Lab4Client:
 
         elif (self.phase_state == self.PHASE_2):
             print('Phase 2')
+
+            # self.navigate_client(init_pose)
+
+            
 
 
         # elif (phase_state == PHASE_3):
@@ -208,12 +252,14 @@ class Lab4Client:
         pose_valid = rospy.ServiceProxy('check_position_cspace', CSpaceValid)
         try:
             resp1 = pose_valid(start)
+
+            response = (resp1.pose, resp1.isValid)
+
+            return response
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
         
-        response = (resp1.pose, resp1.isValid)
-
-        return response
+        
 
 
     def navigation_client(self, goal):
@@ -229,6 +275,18 @@ class Lab4Client:
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
 
+    
+    def path_valid_client(self, path):
+
+        rospy.loginfo("Requesting navigation")
+        rospy.wait_for_service('path_valid')
+        isValid = rospy.ServiceProxy('path_valid', PathValid)
+        try:
+            resp1 = isValid(path)
+            return resp1.valid
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+    
     
     def plan_path_client(self, goal):
 
@@ -253,12 +311,48 @@ class Lab4Client:
         pathdata = rospy.ServiceProxy('plan_path', GetPlan)
         try:
             resp1 = pathdata(start, goal, tolerance)
+            return resp1.plan.poses
             # return resp1.plan.poses
             # self.path_pub.publish(resp1.plan)
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
 
-        return resp1.plan.poses
+        # return resp1.plan.poses
+
+    def plan_path_full_client(self, goal):
+
+        ### RETURNS PATH OBJECT
+
+        start = PoseStamped()
+        start.header.frame_id = "odom"
+        start.pose.position.x = self.px
+        start.pose.position.y = self.py
+        orientation = quaternion_from_euler(0, 0, self.pth)
+        start.pose.orientation.x = orientation[0]
+        start.pose.orientation.y = orientation[1]
+        start.pose.orientation.z = orientation[2]
+        start.pose.orientation.w = orientation[3]
+        
+        # goal = msg
+
+        # print(start, goal)
+
+        rospy.loginfo("Requesting the path")
+        rospy.wait_for_service('plan_path_full')
+        print('Starting service plan path full')
+        pathdata = rospy.ServiceProxy('plan_path_full', GetFullPlan)
+        try:
+            resp1 = pathdata(start, goal)
+
+            resp = (resp1.full.poses, resp1.optimized.poses)
+            # print(resp1.full)
+            # print(resp1.optimized)
+
+            return resp
+            # return resp1.plan.poses
+            # self.path_pub.publish(resp1.plan)
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
 
     def get_frontier_client(self):
 
@@ -277,6 +371,18 @@ class Lab4Client:
 
         # return resp1.pose
         return response
+
+
+    def isFrontierReachable(self, poseFrontier, poseStart):
+
+        rospy.loginfo("Requesting frontier reachability")
+        rospy.wait_for_service('frontier_reachable')
+        reachable = rospy.ServiceProxy('frontier_reachable', FrontierReachable)
+        try:
+            resp1 = reachable(poseFrontier, poseStart)
+            return resp1
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
 
 
     def update_odometry(self, msg):

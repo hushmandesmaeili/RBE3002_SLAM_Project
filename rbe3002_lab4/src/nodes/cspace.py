@@ -6,7 +6,7 @@ import rospy
 from nav_msgs.srv import GetPlan, GetMap
 from nav_msgs.msg import GridCells, OccupancyGrid, Path
 from geometry_msgs.msg import Point, Pose, PoseStamped
-from rbe3002_lab4.srv import CSpaceValid
+from rbe3002_lab4.srv import CSpaceValid, PathValid
 from priority_queue import PriorityQueue
 from scripts.map_functions import *
 
@@ -41,6 +41,7 @@ class ConfigSpace:
         self.cspace_service = rospy.Service('get_padded_map', GetMap, self.calc_cspace)
         self.save_map_service = rospy.Service('save_map', GetMap, self.save_map_callBack)
         self.cspace_valid_service = rospy.Service('check_position_cspace', CSpaceValid, self.pose_valid_callback)
+        self.path_valid_service = rospy.Service('path_valid', PathValid, self.path_valid_callback)
         
         # Initialize node
         rospy.init_node("cspace")
@@ -81,7 +82,8 @@ class ConfigSpace:
         """
 
         ## Constant padding
-        padding = 4
+        padding = 5
+        # padding = 4
 
         self.request_map()
         ## Threshold map
@@ -173,7 +175,7 @@ class ConfigSpace:
                     if (neighbor not in visited):
                         queue.append(neighbor)
         
-        validPose_PoseStamped.position = grid_to_world(mapdata, *validPose_grid)
+        validPose_PoseStamped.pose.position = grid_to_world(mapdata, *validPose_grid)
 
         return validPose_PoseStamped
      
@@ -184,11 +186,20 @@ class ConfigSpace:
         gridPose = world_to_grid(mapdata, startPose.pose.position)
         indexPose = grid_to_index(mapdata, *gridPose)
 
-        if (mapdata.data[indexPose] != -1):
+        if (mapdata.data[indexPose] != 100):
             return True
         else:
             return False
+    
+    def is_in_cspace(self, mapdata, startPose):
 
+        gridPose = world_to_grid(mapdata, startPose.pose.position)
+        indexPose = grid_to_index(mapdata, *gridPose)
+
+        if (mapdata.data[indexPose] == 100):
+            return True
+        else:
+            return False
 
     def save_map_callBack(self, msg):
         
@@ -209,7 +220,19 @@ class ConfigSpace:
     
         return resp
         
+    def path_valid_callback(self, msg):
 
+        current_path = msg.path
+        map = self.calc_cspace(1)
+
+        for pose in current_path:
+            in_cspace = self.is_in_cspace(map, pose)
+            print(in_cspace)
+
+            if (in_cspace):
+                return False
+    
+        return True
 
     
     def run(self):

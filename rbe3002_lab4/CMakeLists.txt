@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   geometry_msgs
   std_msgs
+  nav_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -62,6 +63,8 @@ add_service_files(
   FrontierReachable.srv
   NavigateTo.srv
   CSpaceValid.srv
+  PathValid.srv
+  GetFullPlan.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -76,6 +79,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
   geometry_msgs
+  nav_msgs
 )
 
 ################################################

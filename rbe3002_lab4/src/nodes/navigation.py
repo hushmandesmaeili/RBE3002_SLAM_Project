@@ -80,6 +80,8 @@ class Navigation:
         :param distance     [float] [m]   The distance to cover.
         :param linear_speed [float] [m/s] The forward linear speed.
         """
+        self.send_speed(0, 0)
+
         ### REQUIRED CREDIT
         px_0 = self.px
         py_0 = self.py
@@ -109,7 +111,13 @@ class Navigation:
 
         distance_error = (math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2)) 
 
-        TOLERANCE = 0.02
+        # TOLERANCE = 0.03
+        # if (distance < 0.03):
+        #     TOLERANCE = 0.02
+
+        TOLERANCE = 0.03
+        if (distance < 0.019):
+            TOLERANCE = 0.014
 
         linear_speed_actual = 0.4*linear_speed
 

@@ -91,10 +91,10 @@ class FrontierExploration:
 
         self.edgeDetection(map)
         # self.edgeDetection(mapTest)
-        # print(self._frontier_cells)
+        print(self._frontier_cells)
         print("Segment")
         self.segmentFrontiers(map)
-        # print(self._frontiers_bin)
+        print(self._frontiers_bin)
 
         centroid_gridlist = []
 
@@ -105,37 +105,40 @@ class FrontierExploration:
 
             # # x_start = self.px
             # # y_start = self.py
+            
             current = self._frontiers_bin[i]
 
-            sorted_current = sorted(current)
+            if (len(current) > 5):
 
-            middle_value = int(len(sorted_current)/2)
+                sorted_current = sorted(current)
 
-            median_current = sorted_current[middle_value]
-            centroid_gridlist.append(median_current)
+                middle_value = int(len(sorted_current)/2)
 
-            x_goal = median_current[0]
-            y_goal = median_current[1]
+                median_current = sorted_current[middle_value]
+                centroid_gridlist.append(median_current)
+
+                x_goal = median_current[0]
+                y_goal = median_current[1]
 
 
 
-            distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
-            
-            length = self.calcLength(self._frontiers_bin[i])
-            # print(length)
-
-            # priority = 10*distance/length
-            priority = 0.9*0.1*distance + 0.1*length
-            # print(grid_to_world(map, *centroid), centroid, distance, length, priority)
-
-            #if (map.data[grid_to_index(map, *centroid)] != -1 and map.data[grid_to_index(map, *centroid)] != 100):
-            if (map.data[grid_to_index(map, *median_current)] != -1 and map.data[grid_to_index(map, *median_current)] != 100):   
-
-                frontier_PoseStamped = PoseStamped()
-                frontier_PoseStamped.pose.position = grid_to_world(map, *median_current)
+                distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
                 
-                if (self.isFrontierReachable(frontier_PoseStamped, poseStart)):
-                    frontiersPriorityQueue.put(median_current, priority)
+                length = self.calcLength(self._frontiers_bin[i])
+                # print(length)
+
+                # priority = 10*distance/length
+                priority = 0.7*0.1*distance + 0.3*length
+                # print(grid_to_world(map, *centroid), centroid, distance, length, priority)
+
+                #if (map.data[grid_to_index(map, *centroid)] != -1 and map.data[grid_to_index(map, *centroid)] != 100):
+                if (map.data[grid_to_index(map, *median_current)] != -1 and map.data[grid_to_index(map, *median_current)] != 100):   
+
+                    frontier_PoseStamped = PoseStamped()
+                    frontier_PoseStamped.pose.position = grid_to_world(map, *median_current)
+                    
+                    if (self.isFrontierReachable(frontier_PoseStamped, poseStart)):
+                        frontiersPriorityQueue.put(median_current, priority)
 
             # if (not frontier_to_explore and length > 1):
             #     frontier_to_explore = True
@@ -247,7 +250,25 @@ class FrontierExploration:
             result_dict[t2] = result_dict[t1]
 
         result = [list((next(g))) for k, g in groupby(sorted(result_dict.values(), key=id), id)]
-        self._frontiers_bin = result
+        
+        i = 0
+        sts = [set(l) for l in result]
+       # print(len(sts))
+        while (i < len(sts)):
+            j = i + 1
+            while (j < len(sts)):
+              #  print(i, j)
+                if (not sts[i].isdisjoint(sts[j])):
+                 #   print('Merged ', i, ' and ', j)
+                    sts[i] = sts[i].union(sts[j])
+                    sts.pop(j)
+                  #  print('Popped ', j)
+                else:
+                    j += 1
+            i += 1
+        bin_pairs_merged = [list(s) for s in sts]
+
+        self._frontiers_bin = bin_pairs_merged
                     
 
     # def update_odometry(self, msg):
