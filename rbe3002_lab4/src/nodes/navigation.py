@@ -119,7 +119,7 @@ class Navigation:
         if (distance < 0.019):
             TOLERANCE = 0.014
 
-        linear_speed_actual = 0.4*linear_speed
+        linear_speed_actual = 0.5*linear_speed
 
         self.send_speed(linear_speed_actual, 0)
 
@@ -139,7 +139,7 @@ class Navigation:
             if (distance_error_initial > threshold_start and distance_error > threshold_goal):
                 linear_speed_actual = linear_speed
             else:
-                linear_speed_actual = 0.3*linear_speed
+                linear_speed_actual = 0.5*linear_speed
 
 
             self.send_speed(linear_speed_actual, aspeed * heading_error * kp_th)
@@ -226,8 +226,8 @@ class Navigation:
         # CODE FOR DRIVING TO GOAL
         linear_distance = math.sqrt((px_goal - self.px)**2 + (py_goal- self.py)**2)
         # print(linear_distance)
-        # self.drive(linear_distance, 0.15)
-        self.drive(linear_distance, 0.20)
+        self.drive(linear_distance, 0.12)
+        # self.drive(linear_distance, 0.20)
         rospy.sleep(0.5)
         
 

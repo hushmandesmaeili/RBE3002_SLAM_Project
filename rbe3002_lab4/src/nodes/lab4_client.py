@@ -159,7 +159,7 @@ class Lab4Client:
 
                 if (not frontiers_to_explore):
                     print('Phase 1 COMPLETED')
-                    self.phase_state == self.PHASE_2
+                    self.phase_state = self.PHASE_2
                 else:
                     print('Completed Frontier')
                     print(self.goal_frontier)
@@ -203,10 +203,16 @@ class Lab4Client:
         elif (self.phase_state == self.PHASE_2):
             print('Phase 2')
             start_pose = self.from_position_to_PoseStamped(self.px_0, self.py_0, self.pth_0)
-            self.navigate_client(start_pose)
-            phase_state = self.PHASE_3
+            full_path_response = self.plan_path_full_client(start_pose)
+            optimizied_path = full_path_response[1]
 
-        # elif (phase_state == self.PHASE_3):
+            for pose in optimizied_path:
+                self.navigation_client(pose)
+            
+            self.phase_state = self.PHASE_3
+
+        elif (self.phase_state == self.PHASE_3):
+            print('Phase 3')
 
         # elif (phase_state == EXIT_STATE):
     
@@ -369,14 +375,14 @@ class Lab4Client:
     def from_position_to_PoseStamped(self, px, py, pth):
         pose = PoseStamped()
 
-        pose.position.x = px
-        pose.position.y = py
+        pose.pose.position.x = px
+        pose.pose.position.y = py
 
         orientation = quaternion_from_euler(0, 0, pth)
-        pose.orientation.x = orientation[0]
-        pose.orientation.y = orientation[1]
-        pose.orientation.z = orientation[2]
-        pose.orientation.w = orientation[3]
+        pose.pose.orientation.x = orientation[0]
+        pose.pose.orientation.y = orientation[1]
+        pose.pose.orientation.z = orientation[2]
+        pose.pose.orientation.w = orientation[3]
 
         return pose
 
