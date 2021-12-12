@@ -82,7 +82,7 @@ class ConfigSpace:
         """
 
         ## Constant padding
-        padding = 5
+        padding = 6
         # padding = 4
 
         self.request_map()

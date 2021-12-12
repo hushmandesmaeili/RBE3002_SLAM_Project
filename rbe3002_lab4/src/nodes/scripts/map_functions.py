@@ -200,6 +200,24 @@ def neighbors_of_8_unknown(mapdata, x, y):
 
     return unknown_neighbours
 
+def neighbors_of_8_cspace(mapdata, x, y):
+    """
+    Returns the walkable 8-neighbors cells of (x,y) in the occupancy grid.
+    :param mapdata [OccupancyGrid] The map information.
+    :param x       [int]           The X coordinate in the grid.
+    :param y       [int]           The Y coordinate in the grid.
+    :return        [[(int,int)]]   A list of walkable 8-neighbors.
+    """
+    cspace_neighbours = []
+    
+    for i in range(x - 1, x + 2):
+        for j in range(y - 1, y + 2):
+            if (not(i == x and j == y)):
+                if (mapdata.data[i] == 100):
+                    cspace_neighbours.append((i, j))
+
+    return cspace_neighbours
+
 def isFrontierCell(mapdata, x, y):
 
     # cell = index_to_grid(mapdata, index)

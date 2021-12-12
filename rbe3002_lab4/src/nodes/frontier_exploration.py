@@ -108,7 +108,7 @@ class FrontierExploration:
             
             current = self._frontiers_bin[i]
 
-            if (len(current) > 5):
+            if (len(current) > 2):
 
                 sorted_current = sorted(current)
 
@@ -120,15 +120,13 @@ class FrontierExploration:
                 x_goal = median_current[0]
                 y_goal = median_current[1]
 
-
-
                 distance = euclidean_distance(x_start, y_start, x_goal, y_goal)
                 
                 length = self.calcLength(self._frontiers_bin[i])
                 # print(length)
 
                 # priority = 10*distance/length
-                priority = 0.7*0.1*distance + 0.3*length
+                priority = 0.8*0.1*distance + 0.2*length
                 # print(grid_to_world(map, *centroid), centroid, distance, length, priority)
 
                 #if (map.data[grid_to_index(map, *centroid)] != -1 and map.data[grid_to_index(map, *centroid)] != 100):
@@ -257,12 +255,9 @@ class FrontierExploration:
         while (i < len(sts)):
             j = i + 1
             while (j < len(sts)):
-              #  print(i, j)
                 if (not sts[i].isdisjoint(sts[j])):
-                 #   print('Merged ', i, ' and ', j)
                     sts[i] = sts[i].union(sts[j])
                     sts.pop(j)
-                  #  print('Popped ', j)
                 else:
                     j += 1
             i += 1

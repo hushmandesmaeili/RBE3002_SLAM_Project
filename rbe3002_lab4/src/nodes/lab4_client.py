@@ -46,6 +46,9 @@ class Lab4Client:
         self.pth = 0
         self.currentPoseStamped = PoseStamped()
 
+        self.px_0 = 0
+        self.py_0 = 0
+        self.pth_0 = 0
 
         self.phase_state = 1
         self.phase1_state = 0
@@ -59,10 +62,11 @@ class Lab4Client:
         self.EXIT_STATE = 4
 
         # PHASE 1 States
-        self.CHECK_POSITION = 0
-        self.GET_FRONTIER = 1
-        self.PLAN_PATH = 2
-        self.NAVIGATE_PATH = 3
+        self.STORE_START_LOCATION = 0
+        self.CHECK_POSITION = 1
+        self.GET_FRONTIER = 2
+        self.PLAN_PATH = 3
+        self.NAVIGATE_PATH = 4
 
         # PHASE 2 States
 
@@ -112,6 +116,11 @@ class Lab4Client:
 
 
         if (self.phase_state == self.PHASE_1):
+
+            if (self.phase1_state == self.STORE_START_LOCATION):
+                print('Storing starting location')
+                self.store_start_location()
+                self.phase1_state = self.CHECK_POSITION
 
             if (self.phase1_state == self.CHECK_POSITION):
                 print('checking position')
@@ -186,51 +195,18 @@ class Lab4Client:
                         self.navigation_client(self.path[self.count + 1])
                         self.count += 1
                     
-                    
-
-
-
-                # if (self.isFrontierReachable(self.goal_frontier, self.path[self.count])):
-                #     self.phase1_state = self.PLAN_PATH
-                # else:
                 self.phase1_state = self.CHECK_POSITION
                 
                 self.count = 0
-                # print(self.path[1])
-                # if (len(self.path) == 2):
-                #     self.navigation_client(self.path[1])
-                #     self.phase1_state = self.GET_FRONTIER
-                # else:
-                #     waypoint_x = self.path[self.count].pose.position.x
-                #     waypoint_y = self.path[self.count].pose.position.y
-                #     distance_to_waypoint = euclidean_distance(self.px, self.py, waypoint_x, waypoint_y)
                 
-                # while (distance_to_waypoint < 0.03):
-                #     waypoint_x = self.path[self.count].pose.position.x
-                #     waypoint_y = self.path[self.count].pose.position.y
-                #     distance_to_waypoint = euclidean_distance(self.px, self.py, waypoint_x, waypoint_y)
-                #     self.count += 1
-
-                # self.navigation_client(self.path[self.count])
-                # self.count = 1
-                # self.phase1_state = self.CHECK_POSITION
-
-                
-
-
-                # print('Completed Navigation')
-                # self.phase1_state = self.GET_FRONTIER
-                # rospy.spin()
 
         elif (self.phase_state == self.PHASE_2):
             print('Phase 2')
+            start_pose = self.from_position_to_PoseStamped(self.px_0, self.py_0, self.pth_0)
+            self.navigate_client(start_pose)
+            phase_state = self.PHASE_3
 
-            # self.navigate_client(init_pose)
-
-            
-
-
-        # elif (phase_state == PHASE_3):
+        # elif (phase_state == self.PHASE_3):
 
         # elif (phase_state == EXIT_STATE):
     
@@ -260,7 +236,6 @@ class Lab4Client:
             print("Service did not process request: " + str(exc))
         
         
-
 
     def navigation_client(self, goal):
 
@@ -383,6 +358,27 @@ class Lab4Client:
             return resp1
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
+
+
+    def store_start_location(self):
+        self.px_0 = self.px
+        self.py_0 = self.py
+        self.pth_0 = self.pth
+
+
+    def from_position_to_PoseStamped(self, px, py, pth):
+        pose = PoseStamped()
+
+        pose.position.x = px
+        pose.position.y = py
+
+        orientation = quaternion_from_euler(0, 0, pth)
+        pose.orientation.x = orientation[0]
+        pose.orientation.y = orientation[1]
+        pose.orientation.z = orientation[2]
+        pose.orientation.w = orientation[3]
+
+        return pose
 
 
     def update_odometry(self, msg):

@@ -20,7 +20,7 @@ class PathPlanner:
         Class constructor
         """
 
-        self.extra_cost = 7
+        self.extra_cost = 2
 
         ### REQUIRED CREDIT
         ## Initialize the node and call it "path_planner"
@@ -93,13 +93,16 @@ class PathPlanner:
                 current_pose_stamped = Grid_to_PoseStamped(mapdata, current)
                 next_pose_stamped = Grid_to_PoseStamped(mapdata, next)
 
-                new_cost = cost_so_far[current] + self.find_cost(current_pose_stamped, next_pose_stamped) + self.extra_cost
+                new_cost = cost_so_far[current] + self.find_cost(current_pose_stamped, next_pose_stamped)
 
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
+
+                    cspace_neighbors_len = len(neighbors_of_8_cspace(mapdata, next[0], next[1]))
+
                     cost_so_far[next] = new_cost
 
                     goal_pose_stamped = Grid_to_PoseStamped(mapdata, goal)
-                    priority = new_cost + 0.5*self.heuristic(goal_pose_stamped, next_pose_stamped)
+                    priority = new_cost + 0.5*self.heuristic(goal_pose_stamped, next_pose_stamped) + 4*cspace_neighbors_len
 
                     frontier.put(next, priority)
                     came_from[next] = current
