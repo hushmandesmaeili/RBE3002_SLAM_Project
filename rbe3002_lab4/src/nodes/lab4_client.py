@@ -10,6 +10,7 @@ from rbe3002_lab4.srv import NavigateTo, FrontierReachable, GetFrontier, CSpaceV
 from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from scripts.map_functions import *
+import roslaunch
 
 
 class Lab4Client:
@@ -56,6 +57,7 @@ class Lab4Client:
         self.phase3_state = 0
 
         # PHASES States
+        self.PHASE_0 = 0
         self.PHASE_1 = 1
         self.PHASE_2 = 2
         self.PHASE_3 = 3
@@ -81,6 +83,13 @@ class Lab4Client:
         self.path_full = 0
         self.first_run = True
         self.count = 0
+        
+        
+        self.goal = None
+        
+        
+        self.launch = roslaunch.scriptapi.ROSLaunch()
+        self.launch.start()
 
         # Create publisher
         # cspacePub = rospy.Publisher('/cspace_map', OccupancyGrid, queue_size=10)
@@ -91,6 +100,7 @@ class Lab4Client:
         # cspaceSub = rospy.Subscriber('map', OccupancyGrid, self.getCSpace)
 
         odomSub = rospy.Subscriber('/odom', Odometry, self.update_odometry)
+        goalSub = rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.update_goal)
 
         # Create services
         
@@ -115,7 +125,18 @@ class Lab4Client:
         init_pose.pose.position.y = initial_y
 
 
-        if (self.phase_state == self.PHASE_1):
+        if (self.phase_state == self.PHASE_0):
+            # rospy.init_node('en_Mapping', anonymous=True)
+            uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            roslaunch.configure_logging(uuid)
+            self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/turtlebot3_gmapping.launch"])
+            self.launch.start()
+            rospy.loginfo("started gmapping")
+            rospy.sleep(2)
+            
+            self.phase_state = self.PHASE_1
+            
+        elif (self.phase_state == self.PHASE_1):
 
             if (self.phase1_state == self.STORE_START_LOCATION):
                 print('Storing starting location')
@@ -208,13 +229,48 @@ class Lab4Client:
 
             for pose in optimizied_path:
                 self.navigation_client(pose)
+                
+            self.launch.shutdown()
+                    
+            # Node map server saver
+            package = 'map_server'
+            executable = 'map_saver'
+            node = roslaunch.core.Node(package, executable, args='-f mymap')
+
+            self.launch = roslaunch.scriptapi.ROSLaunch()
+            self.launch.start()
+
+            process = self.launch.launch(node)
+            rospy.sleep(2)
+            process.stop()
+            
+            
+            # Launch amcl
+            uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            roslaunch.configure_logging(uuid)
+            self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/phase3_amcl_mapserver.launch"])
+            self.launch.start()
+            rospy.loginfo("started amcl")
             
             self.phase_state = self.PHASE_3
 
         elif (self.phase_state == self.PHASE_3):
             print('Phase 3')
+            
+            while (self.goal != None):
+                optimizied_path = self.plan_path_client(self.goal)
+                # optimizied_path = full_path_response[1]
+
+                for pose in optimizied_path:
+                    self.navigation_client(pose)
+                    
+                self.goal = None
+            
 
         # elif (phase_state == EXIT_STATE):
+    
+    # def init_gmapping_node(self):
+        
     
     
     def check_position_client(self):
@@ -407,6 +463,14 @@ class Lab4Client:
         self.currentPoseStamped.pose.position.y = msg.pose.pose.position.y
         # self.currentPoseStamped.pose.orientation = msg.pose.pose.orientation
 
+    def update_goal(self, msg):
+        """
+        Updates the current pose of the robot.
+        This method is a callback bound to a Subscriber.
+        :param msg [Odometry] The current odometry information.
+        """
+        ### REQUIRED CREDIT
+        self.goal = msg.pose
 
     def run(self):
 

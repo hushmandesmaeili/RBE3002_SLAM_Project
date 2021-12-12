@@ -292,6 +292,34 @@ class PathPlanner:
         return self.path_to_message(mapdata, waypoints)
 
 
+    # def plan_path_acml(self, msg):
+    #     """
+    #     Plans a path between the start and goal locations in the requested.
+    #     Internally uses A* to plan the optimal path.
+    #     :param req 
+    #     """
+    #     ## Request the map
+    #     ## In case of error, return an empty path
+    #     # mapdata = PathPlanner.request_map()
+    #     print('Plan Path')
+    #     print('Getting CSpace')
+        
+    #     # DO NOT USE CSPACE, USE STATIC MAP FROM MAP_SERVER
+    #     # mapdata = self.getCSpace()
+        
+        
+    #     if mapdata is None:
+    #         return Path()
+
+    #     start = msg.start
+    #     goal = msg.goal
+    #     print('Getting path')
+    #     path = self.a_star(mapdata, start, goal)
+    #     ## Optimize waypoints
+    #     waypoints = PathPlanner.optimize_path(path)
+    #     ## Return a Path message
+    #     return self.path_to_message(mapdata, waypoints)
+
     def plan_path_full(self, msg):
         """
         Plans a path between the start and goal locations in the requested.
