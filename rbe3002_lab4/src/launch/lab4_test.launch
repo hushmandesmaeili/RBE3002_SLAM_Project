@@ -7,13 +7,12 @@
 	<!-- <node name="tf_pub" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /odom 100"/> -->
 
 	<!--launch world and robot -->
-    <!-- <include file="$(find rbe3002_final)/launch/final_maze.launch"/>  -->
+    <!-- <include file="$(find rbe3002_final)/launch/maze_sim.launch"/>  -->
 
 	<!-- TurtleBot3 -->
 	<include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch">
 		<arg name="model" value="$(arg model)" />
 	</include>
-	
 
 	<!--gmapping -->
 	<!--<include file="$(find turtlebot3_slam)/launch/turtlebot3_slam.launch"/>-->
@@ -35,7 +34,7 @@
 	<node pkg="rbe3002_lab4" type="navigation.py" name="navigation"/>
 
 	<!-- Lab4Client node -->
-	<node pkg="rbe3002_lab4" type="lab4_client.py" name="Lab4Client"/>
+	<!-- <node pkg="rbe3002_lab4" type="lab4_client.py" name="Lab4Client"/> -->
 
 
 	<!-- -->

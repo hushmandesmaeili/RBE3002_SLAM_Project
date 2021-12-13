@@ -164,7 +164,8 @@ class Lab4Client:
             # self.launch = roslaunch.parent.ROSLaunchParent(uuid, [path2 + '/src/launch/robot.launch'])
             # self.launch.start()
             # rospy.loginfo("started robot.launch with amcl")
-            
+            print('Finished Phase 2')
+            rospy.sleep(2)
             self.phase_state = self.PHASE_3
             
             

@@ -102,7 +102,7 @@ class PathPlanner:
                     cost_so_far[next] = new_cost
 
                     goal_pose_stamped = Grid_to_PoseStamped(mapdata, goal)
-                    priority = new_cost + 0.5*self.heuristic(goal_pose_stamped, next_pose_stamped) + 4*cspace_neighbors_len
+                    priority = new_cost + 0.5*self.heuristic(goal_pose_stamped, next_pose_stamped) + 5*cspace_neighbors_len
 
                     frontier.put(next, priority)
                     came_from[next] = current
