@@ -126,17 +126,68 @@ class Lab4Client:
 
 
         if (self.phase_state == self.PHASE_0):
-            # rospy.init_node('en_Mapping', anonymous=True)
+
+            # SHUT LAB 4 LAUNCH FILE DOWN, LAUNCH LAB 3 LAUNCH FILE WITH AMCL, LAUNCH MAP SERVER SAVER
             uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
             roslaunch.configure_logging(uuid)
-            self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/turtlebot3_gmapping.launch"])
+            self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/lab4_test.launch"])
+            self.launch.shutdown()
+            rospy.loginfo("stopped lab4_test")
+                    
+            # Node map server saver
+            package = 'map_server'
+            executable = 'map_saver'
+            node = roslaunch.core.Node(package, executable, args='-f mymap')
+
+            self.launch = roslaunch.scriptapi.ROSLaunch()
             self.launch.start()
-            rospy.loginfo("started gmapping")
+            rospy.loginfo("started map saver")
+
+            process = self.launch.launch(node)
             rospy.sleep(2)
+            process.stop()
+            rospy.loginfo("stopped map saver")
+
+            # LAUNCH LAB 3 LAUNCH FILE WITH AMCL
+            uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            roslaunch.configure_logging(uuid)
+            self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab3/src/launch/robot.launch"])
+            self.launch.start()
+            rospy.loginfo("started robot.launch with amcl")
+            
+            self.phase_state = self.PHASE_3
+            
+            
+            # # Launch amcl
+            # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            # roslaunch.configure_logging(uuid)
+            # self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/phase3_amcl_mapserver.launch"])
+            # self.launch.start()
+            # rospy.loginfo("started amcl")
+            
+            # self.phase_state = self.PHASE_3
+
+            # rospy.init_node('en_Mapping', anonymous=True)
+            # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            # roslaunch.configure_logging(uuid)
+            # self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/turtlebot3_gmapping.launch"])
+            # self.launch.start()
+            # rospy.loginfo("started gmapping")
+            # rospy.sleep(2)
             
             self.phase_state = self.PHASE_1
             
         elif (self.phase_state == self.PHASE_1):
+
+            # START GMAPPING (DON'T NEED TO DO THIS, LAUNCHING LAB 4 LAUNCH FILE BY DEFAULT)
+
+            # rospy.init_node('en_Mapping', anonymous=True)
+            # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            # roslaunch.configure_logging(uuid)
+            # self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/turtlebot3_gmapping.launch"])
+            # self.launch.start()
+            # rospy.loginfo("started gmapping")
+            # rospy.sleep(2)
 
             if (self.phase1_state == self.STORE_START_LOCATION):
                 print('Storing starting location')
@@ -229,39 +280,43 @@ class Lab4Client:
 
             for pose in optimizied_path:
                 self.navigation_client(pose)
+
+            self.phase_state = self.PHASE_0
                 
-            self.launch.shutdown()
+            # self.launch.shutdown()
                     
-            # Node map server saver
-            package = 'map_server'
-            executable = 'map_saver'
-            node = roslaunch.core.Node(package, executable, args='-f mymap')
+            # # Node map server saver
+            # package = 'map_server'
+            # executable = 'map_saver'
+            # node = roslaunch.core.Node(package, executable, args='-f mymap')
 
-            self.launch = roslaunch.scriptapi.ROSLaunch()
-            self.launch.start()
+            # self.launch = roslaunch.scriptapi.ROSLaunch()
+            # self.launch.start()
 
-            process = self.launch.launch(node)
-            rospy.sleep(2)
-            process.stop()
+            # process = self.launch.launch(node)
+            # rospy.sleep(2)
+            # process.stop()
             
             
-            # Launch amcl
-            uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-            roslaunch.configure_logging(uuid)
-            self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/phase3_amcl_mapserver.launch"])
-            self.launch.start()
-            rospy.loginfo("started amcl")
+            # # Launch amcl
+            # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            # roslaunch.configure_logging(uuid)
+            # self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/phase3_amcl_mapserver.launch"])
+            # self.launch.start()
+            # rospy.loginfo("started amcl")
             
-            self.phase_state = self.PHASE_3
+            # self.phase_state = self.PHASE_3
+
+            ####################### SHOULDN'T NEED
 
         elif (self.phase_state == self.PHASE_3):
             print('Phase 3')
             
             while (self.goal != None):
-                optimizied_path = self.plan_path_client(self.goal)
-                # optimizied_path = full_path_response[1]
+                optimized_path = self.plan_path_client(self.goal)
+                # optimized_path = full_path_response[1]
 
-                for pose in optimizied_path:
+                for pose in optimized_path:
                     self.navigation_client(pose)
                     
                 self.goal = None
