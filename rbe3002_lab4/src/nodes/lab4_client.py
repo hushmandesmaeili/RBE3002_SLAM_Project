@@ -11,6 +11,7 @@ from priority_queue import PriorityQueue
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from scripts.map_functions import *
 import roslaunch
+from rospkg import RosPack
 
 
 class Lab4Client:
@@ -52,6 +53,7 @@ class Lab4Client:
         self.pth_0 = 0
 
         self.phase_state = 1
+        # self.phase_state = 0
         self.phase1_state = 0
         self.phase2_state = 0
         self.phase3_state = 0
@@ -110,7 +112,6 @@ class Lab4Client:
         rospy.sleep(2.5)
         rospy.loginfo("lab4_client node ready")
 
-
     
     def state_machine(self):
 
@@ -127,33 +128,42 @@ class Lab4Client:
 
         if (self.phase_state == self.PHASE_0):
 
+
             # SHUT LAB 4 LAUNCH FILE DOWN, LAUNCH LAB 3 LAUNCH FILE WITH AMCL, LAUNCH MAP SERVER SAVER
-            uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-            roslaunch.configure_logging(uuid)
-            self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab4/src/launch/lab4_test.launch"])
-            self.launch.shutdown()
-            rospy.loginfo("stopped lab4_test")
+            # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            # roslaunch.configure_logging(uuid)
+            # rp = RosPack()
+            # path1 = rp.get_path('rbe3002_lab4')
+            # self.launch = roslaunch.parent.ROSLaunchParent(uuid, [path1 + 'src/launch/lab4_test.launch'])
+            # self.launch.shutdown()
+            # rospy.loginfo("stopped lab4_test")
+            # rospy.sleep(2)
                     
             # Node map server saver
-            package = 'map_server'
-            executable = 'map_saver'
-            node = roslaunch.core.Node(package, executable, args='-f mymap')
+            # package = 'map_server'
+            # executable = 'map_saver'
+            # path3 = rp.get_path('rbe')
+            # node = roslaunch.core.Node(package, executable, args='-f $(find mymap')
 
-            self.launch = roslaunch.scriptapi.ROSLaunch()
-            self.launch.start()
-            rospy.loginfo("started map saver")
+            # self.launch = roslaunch.scriptapi.ROSLaunch()
+            # self.launch.start()
+            # rospy.loginfo("started map saver")
 
-            process = self.launch.launch(node)
-            rospy.sleep(2)
-            process.stop()
-            rospy.loginfo("stopped map saver")
+            # process = self.launch.launch(node)
+            # i = 0
+            # while i < 1000:
+            #     i += 1
+            # # rospy.sleep(2)
+            # process.stop()
+            # rospy.loginfo("stopped map saver")
 
-            # LAUNCH LAB 3 LAUNCH FILE WITH AMCL
-            uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-            roslaunch.configure_logging(uuid)
-            self.launch = roslaunch.parent.ROSLaunchParent(uuid, ["~/catkin_ws/src/rbe3002_lab3/src/launch/robot.launch"])
-            self.launch.start()
-            rospy.loginfo("started robot.launch with amcl")
+            # # LAUNCH LAB 3 LAUNCH FILE WITH AMCL
+            # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            # roslaunch.configure_logging(uuid)
+            # path2 = rp.get_path('rbe3002_lab3')
+            # self.launch = roslaunch.parent.ROSLaunchParent(uuid, [path2 + '/src/launch/robot.launch'])
+            # self.launch.start()
+            # rospy.loginfo("started robot.launch with amcl")
             
             self.phase_state = self.PHASE_3
             

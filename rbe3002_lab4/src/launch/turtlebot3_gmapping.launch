@@ -12,8 +12,8 @@
     <param name="odom_frame" value="$(arg set_odom_frame)"/>
     <param name="map_frame"  value="$(arg set_map_frame)"/>
     <rosparam command="load" file="$(find turtlebot3_slam)/config/gmapping_params.yaml" />
-    <param name="xmin" value="-1.0"/> 
-		<param name="ymin" value="-1.0"/> 
+    <param name="xmin" value="-3.0"/> 
+		<param name="ymin" value="-3.0"/> 
 		<param name="xmax" value="3.0"/> 
 		<param name="ymax" value="3.0"/> 
 		<!-- <param name="delta" value="0.0165"/>  -->

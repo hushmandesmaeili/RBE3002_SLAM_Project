@@ -7,7 +7,7 @@
 	<!-- <node name="tf_pub" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /odom 100"/> -->
 
 	<!--launch world and robot -->
-    <!-- <include file="$(find rbe3002_final)/launch/maze_sim.launch"/>  -->
+    <!-- <include file="$(find rbe3002_final)/launch/final_maze.launch"/>  -->
 
 	<!-- TurtleBot3 -->
 	<include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch">
