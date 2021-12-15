@@ -169,9 +169,9 @@ class ConfigSpace:
                 not_found_pose = False
             else:
                 
-                new_unknown_neighbors = neighbors_of_8_unknown(mapdata, *tempPose)
+                new_cspace_neighbors = neighbors_of_8_cspace(mapdata, *tempPose)
                 
-                for neighbor in new_unknown_neighbors:
+                for neighbor in new_cspace_neighbors:
                     if (neighbor not in visited):
                         queue.append(neighbor)
         
