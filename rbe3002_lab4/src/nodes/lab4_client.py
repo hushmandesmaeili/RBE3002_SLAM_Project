@@ -166,7 +166,7 @@ class Lab4Client:
             # rospy.loginfo("started robot.launch with amcl")
             print('Finished Phase 2')
             rospy.sleep(2)
-            self.phase_state = self.PHASE_3
+            # self.phase_state = self.PHASE_3
             
             
             # # Launch amcl
@@ -186,7 +186,7 @@ class Lab4Client:
             # rospy.loginfo("started gmapping")
             # rospy.sleep(2)
             
-            self.phase_state = self.PHASE_1
+            # self.phase_state = self.PHASE_1
             
         elif (self.phase_state == self.PHASE_1):
 
@@ -230,7 +230,7 @@ class Lab4Client:
                                                         temp_frontier.pose.position.x, 
                                                         temp_frontier.pose.position.y)
 
-                if (distance_frontier > 0.2):
+                if (distance_frontier > 0.15):
                     self.goal_frontier = temp_frontier
                 elif (self.first_run):
                     self.goal_frontier = temp_frontier

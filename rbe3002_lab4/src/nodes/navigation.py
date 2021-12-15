@@ -158,7 +158,7 @@ class Navigation:
         pth_0 = self.pth
 
         # TOLERANCE = 0.007
-        TOLERANCE = 0.015
+        TOLERANCE = 0.0155
 
         desired_angle = pth_0 + angle
         error = self.computeAngleError(pth_0, desired_angle)

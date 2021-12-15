@@ -82,8 +82,8 @@ class ConfigSpace:
         """
 
         ## Constant padding
-        #padding = 4
-        padding = 3
+        # padding = 6
+        padding = 7         # PADDING FINAL MAP
 
         self.request_map()
         ## Threshold map

@@ -5,12 +5,14 @@
 	<node name="map_server" pkg="map_server" type="map_server" args="$(find rbe3002_lab3)/src/maps/mymap.yaml"/>
 	   <!-- <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch"/> -->
 	<include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch"/>
+
+	<!-- <node type="static_transform_publisher" name="static_transform_publisher" pkg="tf" args="0 0 0 0 0 0 /map /odom 10000"/> -->
 	
 	<!-- AMCL -->
-	<include file="$(find turtlebot3_navigation)/launch/amcl.launch"/>
+	<include file="$(find rbe3002_lab3)/src/launch/amcl_final.launch"/>
 
 	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find rbe3002_lab3)/src/rviz/rbe3002_lab3.rviz"/>
-	<node pkg="rbe3002_lab3" type="path_planner.py" name="lab3"/>
+	<!-- <node pkg="rbe3002_lab3" type="path_planner.py" name="lab3"/> -->
 	<node pkg="rbe3002_lab3" type="path_planner_client.py" name="path_planner_client"/>
 	<node pkg="rbe3002_lab2" type="lab2.py" name="lab2"/>
 </launch>

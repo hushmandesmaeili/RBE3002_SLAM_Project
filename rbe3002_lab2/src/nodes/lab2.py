@@ -27,7 +27,7 @@ class Lab2:
         self.speed_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         ### Tell ROS that this node subscribes to Odometry messages on the '/odom' topic
         ### When a message is received, call self.update_odometry
-        rospy.Subscriber('/odom', Odometry, self.update_odometry)
+        # rospy.Subscriber('/odom', Odometry, self.update_odometry)
 
         # AMCL Subscriber for Final Lab
         rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.update_predicted_position)
@@ -173,8 +173,8 @@ class Lab2:
         ### MATH FOR X AND Y DISTANCE
         px_0 = self.px
         py_0 = self.py
-        px_goal = msg.pose.position.x
-        py_goal = msg.pose.position.y
+        px_goal = msg.pose.pose.position.x
+        py_goal = msg.pose.pose.position.y
         # print(px_goal, py_goal)
 
         ### MATH FOR THETA DISTANCE FOR ROTATION 1
@@ -192,30 +192,30 @@ class Lab2:
         self.drive(linear_distance, 0.2)
         rospy.sleep(1)
 
-        # # CODE FOR SECOND ROTATION
-        # ### MATH FOR THETA DISTANCE FOR ROTATION 2
-        # pth_0 = self.pth
-        # quat_orig = msg.pose.orientation
-        # quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
-        # (roll, pitch, yaw) = euler_from_quaternion(quat_list)
-        # pth_goal_2 = yaw
-        # pth_curr = pth_goal_2 - pth_0
-        # self.rotate(pth_curr, 0.15)    # CHANGE TO DEPEND ON LOCATION OF FINAL ANGLE
-        # rospy.sleep(1)
-
-    def update_odometry(self, msg):
-        """
-        Updates the current pose of the robot.
-        This method is a callback bound to a Subscriber.
-        :param msg [Odometry] The current odometry information.
-        """
-        ### REQUIRED CREDIT
-        self.px = msg.pose.pose.position.x
-        self.py = msg.pose.pose.position.y
+        # CODE FOR SECOND ROTATION
+        ### MATH FOR THETA DISTANCE FOR ROTATION 2
+        pth_0 = self.pth
         quat_orig = msg.pose.pose.orientation
         quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
         (roll, pitch, yaw) = euler_from_quaternion(quat_list)
-        self.pth = yaw
+        pth_goal_2 = yaw
+        pth_curr = pth_goal_2 - pth_0
+        self.rotate(pth_curr, 0.15)    # CHANGE TO DEPEND ON LOCATION OF FINAL ANGLE
+        rospy.sleep(1)
+
+    # def update_odometry(self, msg):
+    #     """
+    #     Updates the current pose of the robot.
+    #     This method is a callback bound to a Subscriber.
+    #     :param msg [Odometry] The current odometry information.
+    #     """
+    #     ### REQUIRED CREDIT
+    #     self.px = msg.pose.pose.position.x
+    #     self.py = msg.pose.pose.position.y
+    #     quat_orig = msg.pose.pose.orientation
+    #     quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
+    #     (roll, pitch, yaw) = euler_from_quaternion(quat_list)
+    #     self.pth = yaw
 
     def update_predicted_position(self, msg):
         """
@@ -223,7 +223,7 @@ class Lab2:
         This method is a callback bound to a Subscriber.
         :param msg [PoseStampedWithCovariance] The current AMCL pose information.
         """
-        ### REQUIRED CREDIT
+        ## REQUIRED CREDIT
         self.px = msg.pose.pose.position.x
         self.py = msg.pose.pose.position.y
         quat_orig = msg.pose.pose.orientation

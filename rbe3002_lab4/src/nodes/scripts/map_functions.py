@@ -195,7 +195,8 @@ def neighbors_of_8_unknown(mapdata, x, y):
     for i in range(x - 1, x + 2):
         for j in range(y - 1, y + 2):
             if (not(i == x and j == y)):
-                if (mapdata.data[i] == -1):
+                index = grid_to_index(mapdata,i,j)
+                if (mapdata.data[index] == -1):
                     unknown_neighbours.append((i, j))
 
     return unknown_neighbours
@@ -213,7 +214,8 @@ def neighbors_of_8_cspace(mapdata, x, y):
     for i in range(x - 1, x + 2):
         for j in range(y - 1, y + 2):
             if (not(i == x and j == y)):
-                if (mapdata.data[i] == 100):
+                index = grid_to_index(mapdata, i,j)
+                if (mapdata.data[index] == 100):
                     cspace_neighbours.append((i, j))
 
     return cspace_neighbours
