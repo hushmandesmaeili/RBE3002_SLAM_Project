@@ -17,8 +17,8 @@
     <param name="transform_tolerance"       value="0.5"/>
     <param name="recovery_alpha_slow"       value="0.00"/>
     <param name="recovery_alpha_fast"       value="0.00"/>
-    <param name="initial_pose_x"            value="0.381509065628"/>
-    <param name="initial_pose_y"            value="1.39504480362"/>
+    <param name="initial_pose_x"            value="1.24425888062"/>
+    <param name="initial_pose_y"            value="1.14305758476"/>
     <param name="initial_pose_a"            value="$(arg initial_pose_a)"/>
     <param name="gui_publish_rate"          value="50.0"/>
 

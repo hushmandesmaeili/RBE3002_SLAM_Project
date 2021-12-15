@@ -290,7 +290,6 @@ class PathPlanner:
         :param mapdata [OccupancyGrid] The map data.
         :param start [PoseStamped] The start point of the path
         :param goal [PoseStamped] The goal point of the path
-
         """
         ### REQUIRED CREDIT
         #rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start.pose.position[0], start.pose.position[1], goal.pose.position[0], goal.pose.position[1]))
@@ -558,7 +557,7 @@ class PathPlanner:
         if mapdata is None:
             return Path()
         ## Calculate the C-space and publish it
-        cspacedata = self.calc_cspace(mapdata, 5)
+        cspacedata = self.calc_cspace(mapdata, 1)
         ## Execute A*
         # start = PathPlanner.world_to_grid(mapdata, msg.start.pose.position)
         # goal  = PathPlanner.world_to_grid(mapdata, msg.goal.pose.position)
