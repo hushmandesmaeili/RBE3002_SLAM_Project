@@ -17,8 +17,8 @@
 		<param name="xmax" value="4.0"/> 
 		<param name="ymax" value="4.0"/> 
 		<!-- <param name="delta" value="0.0165"/>  -->
-    <!-- <param name="delta" value="0.014"/>  -->                    <!-- USESEEUEEUEUEUUESEUEUESUE (FINAL) -->
-    <param name="delta" value="0.0255"/> 
+    <param name="delta" value="0.016"/>                     
+    <!-- <param name="delta" value="0.017"/>  -->
 
   </node>
 </launch>

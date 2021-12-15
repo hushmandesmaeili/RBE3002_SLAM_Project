@@ -117,7 +117,8 @@ class Navigation:
 
         TOLERANCE = 0.03
         if (distance < 0.019):
-            TOLERANCE = 0.014
+            #TOLERANCE = 0.012
+            TOLERANCE = 0.009
 
         linear_speed_actual = 0.5*linear_speed
 
@@ -149,16 +150,13 @@ class Navigation:
         self.send_speed(0, 0)
 
     def rotate(self, angle, aspeed):
-        """
-        Rotates the robot around the body center by the given angle.
-        :param angle         [float] [rad]   The distance to cover.
-        :param angular_speed [float] [rad/s] The angular speed.
+        """        if(msg == None):
         """
         ### REQUIRED CREDIT
         pth_0 = self.pth
 
-        # TOLERANCE = 0.007
-        TOLERANCE = 0.0155
+        TOLERANCE = 0.018
+        #TOLERANCE = 0.0140
 
         desired_angle = pth_0 + angle
         error = self.computeAngleError(pth_0, desired_angle)
@@ -210,6 +208,7 @@ class Navigation:
         ### MATH FOR X AND Y DISTANCE
         px_0 = self.px
         py_0 = self.py
+
         px_goal = msg.pose.pose.position.x
         py_goal = msg.pose.pose.position.y
         # print(px_goal, py_goal)

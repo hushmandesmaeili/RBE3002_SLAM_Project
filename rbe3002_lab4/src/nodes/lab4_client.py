@@ -207,46 +207,54 @@ class Lab4Client:
 
             if (self.phase1_state == self.CHECK_POSITION):
                 print('checking position')
-                cspace_node_response = self.check_position_client()
-                position_goal = cspace_node_response[0]
-                is_valid_pose = cspace_node_response[1]
-                print(is_valid_pose)
+                try:
+                    cspace_node_response = self.check_position_client()
+                    position_goal = cspace_node_response[0]
+                    is_valid_pose = cspace_node_response[1]
+                    print(is_valid_pose)
 
-                if not(is_valid_pose):
-                    self.navigation_client(position_goal)
+                    if not(is_valid_pose):
+                        self.navigation_client(position_goal)
 
-                else:
-                    self.phase1_state = self.GET_FRONTIER
+                    else:
+                        self.phase1_state = self.GET_FRONTIER
+
+                except rospy.ROSException as exc:
+                    print("ROSException did not process request: " + str(exc))
 
 
             if (self.phase1_state == self.GET_FRONTIER):
-                print('Getting Frontier')
-                frontier_node_response = self.get_frontier_client()
-                # print(frontier_node_response)
-                self.old_frontier = self.goal_frontier
-                temp_frontier = frontier_node_response[0]
-                distance_frontier = euclidean_distance(self.old_frontier.pose.position.x, 
-                                                        self.old_frontier.pose.position.y, 
-                                                        temp_frontier.pose.position.x, 
-                                                        temp_frontier.pose.position.y)
+                try:
+                    print('Getting Frontier')
+                    frontier_node_response = self.get_frontier_client()
+                    # print(frontier_node_response)
+                    self.old_frontier = self.goal_frontier
+                    temp_frontier = frontier_node_response[0]
+                    distance_frontier = euclidean_distance(self.old_frontier.pose.position.x, 
+                                                            self.old_frontier.pose.position.y, 
+                                                            temp_frontier.pose.position.x, 
+                                                            temp_frontier.pose.position.y)
 
-                if (distance_frontier > 0.15):
-                    self.goal_frontier = temp_frontier
-                elif (self.first_run):
-                    self.goal_frontier = temp_frontier
-                    self.first_run = False
+                    if (distance_frontier > 0.15):
+                        self.goal_frontier = temp_frontier
+                    elif (self.first_run):
+                        self.goal_frontier = temp_frontier
+                        self.first_run = False
 
-                frontiers_to_explore = frontier_node_response[1]
+                    frontiers_to_explore = frontier_node_response[1]
 
-                # print('Goal frontier is ', goal_frontier)
+                    # print('Goal frontier is ', goal_frontier)
 
-                if (not frontiers_to_explore):
-                    print('Phase 1 COMPLETED')
-                    self.phase_state = self.PHASE_2
-                else:
-                    print('Completed Frontier')
-                    print(self.goal_frontier)
-                    self.phase1_state = self.PLAN_PATH
+                    if (not frontiers_to_explore):
+                        print('Phase 1 COMPLETED')
+                        self.phase_state = self.PHASE_2
+                    else:
+                        print('Completed Frontier')
+                        print(self.goal_frontier)
+                        self.phase1_state = self.PLAN_PATH
+                
+                except rospy.ROSException as exc:
+                    print("ROSException did not process request: " + str(exc))
 
 
             ## FIND A WAY TO PLAN PATH AND NAVIGATE AT THE SAME TIME
@@ -254,12 +262,21 @@ class Lab4Client:
                 print('Planning path')
                 # print(goal_frontier)
                 full_path_response = self.plan_path_full_client(self.goal_frontier)
-                print('Full path completed')
-                self.path = full_path_response[1]
-                self.path_full = full_path_response[0]
+                
+                if(full_path_response == None):
+                    
+                    print ("No path")
+                    self.phase1_state = self.CHECK_POSITION
 
-                print('Completed Plan Path')
-                self.phase1_state = self.NAVIGATE_PATH
+
+                else:
+
+                    print('Full path completed')
+                    self.path = full_path_response[1]
+                    self.path_full = full_path_response[0]
+
+                    print('Completed Plan Path')
+                    self.phase1_state = self.NAVIGATE_PATH
 
             elif (self.phase1_state == self.NAVIGATE_PATH):
                 valid_path = self.path_valid_client(self.path_full)
@@ -287,9 +304,10 @@ class Lab4Client:
             print('Phase 2')
             start_pose = self.from_position_to_PoseStamped(self.px_0, self.py_0, self.pth_0)
             full_path_response = self.plan_path_full_client(start_pose)
-            optimizied_path = full_path_response[1]
+            optimized_path = full_path_response[1]
+            # unoptimized_path = full_path_response[0]
 
-            for pose in optimizied_path:
+            for pose in optimized_path:
                 self.navigation_client(pose)
 
             self.phase_state = self.PHASE_0
@@ -409,6 +427,7 @@ class Lab4Client:
         # print(start, goal)
 
         tolerance = 0.05
+        #tolerance = 0.04
         rospy.loginfo("Requesting the path")
         rospy.wait_for_service('plan_path')
         pathdata = rospy.ServiceProxy('plan_path', GetPlan)
@@ -448,8 +467,8 @@ class Lab4Client:
             resp1 = pathdata(start, goal)
 
             resp = (resp1.full.poses, resp1.optimized.poses)
-            # print(resp1.full)
-            # print(resp1.optimized)
+            print(resp1.full)
+            print(resp1.optimized)
 
             return resp
             # return resp1.plan.poses

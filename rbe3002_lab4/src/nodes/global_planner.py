@@ -102,7 +102,7 @@ class PathPlanner:
                     cost_so_far[next] = new_cost
 
                     goal_pose_stamped = Grid_to_PoseStamped(mapdata, goal)
-                    priority = new_cost + 0.8*self.heuristic(goal_pose_stamped, next_pose_stamped) + cspace_neighbors_len
+                    priority = new_cost + .5*self.heuristic(goal_pose_stamped, next_pose_stamped) + cspace_neighbors_len
 
                     frontier.put(next, priority)
                     came_from[next] = current
@@ -332,8 +332,9 @@ class PathPlanner:
         print('Plan Full Path')
         print('Getting CSpace')
         mapdata = self.getCSpace()
-        if mapdata is None:
-            return Path()
+        
+        # if mapdata is None:
+        #     return Path()
             
         start = msg.start
         goal = msg.goal

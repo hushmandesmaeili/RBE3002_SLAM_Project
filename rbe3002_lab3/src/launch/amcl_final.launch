@@ -11,7 +11,7 @@
     <param name="min_particles"             value="100"/>
     <param name="max_particles"             value="10000"/>
     <param name="kld_err"                   value="0.02"/>
-    <param name="update_min_d"              value="0.05"/>
+    <param name="update_min_d"              value="0.1"/>
     <param name="update_min_a"              value="0.05"/>
     <param name="resample_interval"         value="1"/>
     <param name="transform_tolerance"       value="0.5"/>
