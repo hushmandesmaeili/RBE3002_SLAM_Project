@@ -310,7 +310,7 @@ class Lab4Client:
             for pose in optimized_path:
                 self.navigation_client(pose)
 
-            self.phase_state = self.PHASE_0
+            self.phase_state = self.PHASE_3
                 
             # self.launch.shutdown()
                     
@@ -336,10 +336,9 @@ class Lab4Client:
             
             # self.phase_state = self.PHASE_3
 
-            ####################### SHOULDN'T NEED
 
         elif (self.phase_state == self.PHASE_3):
-            print('Phase 3')
+            # print('Phase 3')
             
             while (self.goal != None):
                 optimized_path = self.plan_path_client(self.goal)
@@ -422,7 +421,7 @@ class Lab4Client:
         start.pose.orientation.z = orientation[2]
         start.pose.orientation.w = orientation[3]
         
-        # goal = msg
+        #goal = msg
 
         # print(start, goal)
 
@@ -555,7 +554,10 @@ class Lab4Client:
         :param msg [Odometry] The current odometry information.
         """
         ### REQUIRED CREDIT
-        self.goal = msg.pose
+        # self.goal = msg.pose
+        self.goal = PoseStamped()
+        self.goal.header = msg.header
+        self.goal.pose = msg.pose
 
     def run(self):
 

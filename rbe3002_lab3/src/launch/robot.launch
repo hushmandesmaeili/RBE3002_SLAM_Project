@@ -4,8 +4,8 @@
 	<!-- <node name="tf_pub" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /odom 100"/> -->
 	<node name="map_server" pkg="map_server" type="map_server" args="$(find rbe3002_lab3)/src/maps/mymap.yaml"/>
 	   <!-- <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch"/> -->
-	   <include file="$(find rbe3002_final)/launch/final_maze.launch"/> 
-	<!-- <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch"/> -->
+	   <!-- <include file="$(find rbe3002_final)/launch/final_maze.launch"/>  -->
+	<include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch"/>
 
 	<!-- <node type="static_transform_publisher" name="static_transform_publisher" pkg="tf" args="0 0 0 0 0 0 /map /odom 10000"/> -->
 	
