@@ -290,7 +290,6 @@ class PathPlanner:
         :param mapdata [OccupancyGrid] The map data.
         :param start [PoseStamped] The start point of the path
         :param goal [PoseStamped] The goal point of the path
-
         """
         ### REQUIRED CREDIT
         #rospy.loginfo("Executing A* from (%d,%d) to (%d,%d)" % (start.pose.position[0], start.pose.position[1], goal.pose.position[0], goal.pose.position[1]))

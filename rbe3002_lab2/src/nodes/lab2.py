@@ -5,6 +5,7 @@ import math
 from nav_msgs.msg import Odometry, Path
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from tf.transformations import euler_from_quaternion
 
 
@@ -27,7 +28,11 @@ class Lab2:
         self.speed_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         ### Tell ROS that this node subscribes to Odometry messages on the '/odom' topic
         ### When a message is received, call self.update_odometry
-        rospy.Subscriber('/odom', Odometry, self.update_odometry)
+        # rospy.Subscriber('/odom', Odometry, self.update_odometry)
+
+        # AMCL
+        rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.update_amcl_pose)
+
         ### Tell ROS that this node subscribes to PoseStamped messages on the '/move_base_simple/goal' topic
         ### When a message is received, call self.go_to
         # rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.go_to)
@@ -117,7 +122,7 @@ class Lab2:
         ### REQUIRED CREDIT
         pth_0 = self.pth
 
-        TOLERANCE = 0.007
+        TOLERANCE = 0.2
 
         desired_angle = pth_0 + angle
         error = self.computeAngleError(pth_0, desired_angle)
@@ -130,7 +135,7 @@ class Lab2:
         while (abs(error) > (TOLERANCE)):
             error = self.computeAngleError(self.pth, desired_angle)
             # print(error)
-            rospy.sleep(0.05)
+            rospy.sleep(0.02)
 
         self.send_speed(0, 0)
 
@@ -188,18 +193,32 @@ class Lab2:
         self.drive(linear_distance, 0.2)
         rospy.sleep(1)
 
-        # # CODE FOR SECOND ROTATION
-        # ### MATH FOR THETA DISTANCE FOR ROTATION 2
-        # pth_0 = self.pth
-        # quat_orig = msg.pose.orientation
-        # quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
-        # (roll, pitch, yaw) = euler_from_quaternion(quat_list)
-        # pth_goal_2 = yaw
-        # pth_curr = pth_goal_2 - pth_0
-        # self.rotate(pth_curr, 0.15)    # CHANGE TO DEPEND ON LOCATION OF FINAL ANGLE
-        # rospy.sleep(1)
+        # CODE FOR SECOND ROTATION
+        ### MATH FOR THETA DISTANCE FOR ROTATION 2
+        pth_0 = self.pth
+        quat_orig = msg.pose.orientation
+        quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
+        (roll, pitch, yaw) = euler_from_quaternion(quat_list)
+        pth_goal_2 = yaw
+        pth_curr = pth_goal_2 - pth_0
+        self.rotate(pth_curr, 0.15)    # CHANGE TO DEPEND ON LOCATION OF FINAL ANGLE
+        rospy.sleep(1)
 
-    def update_odometry(self, msg):
+    # def update_odometry(self, msg):
+    #     """
+    #     Updates the current pose of the robot.
+    #     This method is a callback bound to a Subscriber.
+    #     :param msg [Odometry] The current odometry information.
+    #     """
+    #     ### REQUIRED CREDIT
+    #     self.px = msg.pose.pose.position.x
+    #     self.py = msg.pose.pose.position.y
+    #     quat_orig = msg.pose.pose.orientation
+    #     quat_list = [quat_orig.x, quat_orig.y, quat_orig.z, quat_orig.w]
+    #     (roll, pitch, yaw) = euler_from_quaternion(quat_list)
+    #     self.pth = yaw
+
+    def update_amcl_pose(self, msg):
         """
         Updates the current pose of the robot.
         This method is a callback bound to a Subscriber.

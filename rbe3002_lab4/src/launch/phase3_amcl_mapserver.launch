@@ -1,0 +1,10 @@
+<!-- <launch>
+  <!-- Arguments -->
+
+  <!-- AMCL -->
+  <include file="$(find turtlebot3_navigation)/launch/amcl.launch">
+
+  <!-- Map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find rbe3002_lab4)/src/mymap.yaml"/>
+
+</launch> -->
